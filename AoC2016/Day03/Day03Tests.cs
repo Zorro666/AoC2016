@@ -6,10 +6,11 @@ namespace Day03
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day03(string directions, int expected)
+        [TestCase("  5  10  25", 0)]
+        public void ValidTriangles(string triangle, int expectedValidCount)
         {
-            Assert.Fail();
+            Program.Parse(new string[] { triangle });
+            Assert.That(Program.CountValidTriangles(), Is.EqualTo(expectedValidCount));
         }
     }
 }
