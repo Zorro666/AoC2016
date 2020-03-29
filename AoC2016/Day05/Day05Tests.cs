@@ -6,10 +6,16 @@ namespace Day05
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day05(string directions, int expected)
+        [TestCase("abc", "18f47a30")]
+        public void Password(string doorID, string expected)
         {
-            Assert.Fail();
+            Assert.That(Program.Password(doorID), Is.EqualTo(expected));
+        }
+        [Test]
+        [TestCase("abc", "05ace8e3")]
+        public void PasswordComplex(string doorID, string expected)
+        {
+            Assert.That(Program.PasswordComplex(doorID), Is.EqualTo(expected));
         }
     }
 }
