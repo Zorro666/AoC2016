@@ -6,10 +6,13 @@ namespace Day07
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day07(string directions, int expected)
+        [TestCase("abba[mnop]qrst", true)]
+        [TestCase("abcd[bddb]xyyx", false)]
+        [TestCase("aaaa[qwer]tyui", false)]
+        [TestCase("ioxxoj[asdfgh]zxcvbn", true)]
+        public void Day07(string ip, bool expected)
         {
-            Assert.Fail();
+            Assert.That(Program.SupportsTCP(ip), Is.EqualTo(expected));
         }
     }
 }
