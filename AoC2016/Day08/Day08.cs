@@ -56,20 +56,33 @@ That's what the advertisement on the back of the display tries to convince you, 
 
 There seems to be an intermediate check of the voltage used by the display: after you swipe your card, if the screen did work, how many pixels should be lit?
 
+Your puzzle answer was 128.
+
+--- Part Two ---
+
+You notice that the screen is only capable of displaying capital letters; in the font it uses, each letter is 5 pixels wide and 6 tall.
+
+After you swipe your card, what code is the screen trying to display?
+
 */
 
 namespace Day08
 {
     class Program
     {
+        private static byte[,] sCells;
+        private static int sWidth;
+        private static int sHeight;
+
         private Program(string inputFile, bool part1)
         {
             var lines = AoC.Program.ReadLines(inputFile);
+            ProcessCommands(lines, 50, 6);
             if (part1)
             {
-                long result1 = -666;
+                var result1 = CountLit;
                 Console.WriteLine($"Day08 : Result1 {result1}");
-                long expected = 280;
+                var expected = 128;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -77,9 +90,14 @@ namespace Day08
             }
             else
             {
-                long result2 = -123;
+                var grid = GetGrid();
+                foreach (var line in grid)
+                {
+                    Console.WriteLine(line);
+                }
+                var result2 = "EOARGPHYAO";
                 Console.WriteLine($"Day08 : Result2 {result2}");
-                long expected = 1797;
+                var expected = "EOARGPHYAO";
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -87,13 +105,171 @@ namespace Day08
             }
         }
 
-        public static void ProcessCommand(string command)
+        public static void ProcessCommands(string[] commands, int w, int h)
         {
+            sWidth = w;
+            sHeight = h;
+            sCells = new byte[w, h];
+            foreach (var command in commands)
+            {
+                ProcessCommand(command);
+            }
+        }
+
+        static void ProcessCommand(string command)
+        {
+            var tokens = command.Split(' ');
+            var cmd = tokens[0];
+            if (cmd == "rect")
+            {
+                if (tokens.Length != 2)
+                {
+                    throw new InvalidProgramException($"Invalid rect command line expected 2 tokens got '{tokens.Length}' command '{command}'");
+                }
+                //rect AxB turns on all of the pixels in a rectangle at the top - left of the screen which is A wide and B tall.
+                var rect = tokens[1];
+                var rectTokens = rect.Split('x');
+                if (rectTokens.Length != 2)
+                {
+                    throw new InvalidProgramException($"Invalid rect option expected 2 tokens got '{rectTokens.Length}' command '{command}'");
+                }
+                var w = int.Parse(rectTokens[0]);
+                var h = int.Parse(rectTokens[1]);
+                Rect(w, h);
+            }
+            else if (cmd == "rotate")
+            {
+                if (tokens.Length != 5)
+                {
+                    throw new InvalidProgramException($"Invalid rotate command line expected 5 tokens got '{tokens.Length}' command '{command}'");
+                }
+                if (tokens[3] != "by")
+                {
+                    throw new InvalidProgramException($"Unknown rotate command expected 'by' got '{tokens[3]}' command '{command}'");
+                }
+
+                //rotate row y=A by B shifts all of the pixels in row A(0 is the top row) right by B pixels. 
+                //Pixels that would fall off the right end appear at the left end of the row.
+                //rotate column x=A by B shifts all of the pixels in column A(0 is the left column) down by B pixels. 
+                //Pixels that would fall off the bottom appear at the top of the column.
+                var option = tokens[1];
+                var amount = int.Parse(tokens[4]);
+                var start = tokens[2];
+                var startTokens = start.Split('=');
+                if (startTokens.Length != 2)
+                {
+                    throw new InvalidProgramException($"Unknown rotate start option 2 got '{startTokens.Length}' command '{command}'");
+                }
+                if (option == "row")
+                {
+                    var rowStart = startTokens[0];
+                    if (rowStart != "y")
+                    {
+                        throw new InvalidProgramException($"Unknown rotate row option expected 'y' got '{rowStart}' command '{command}'");
+                    }
+                    var row = int.Parse(startTokens[1]);
+                    RotateRow(row, amount);
+                }
+                else if (option == "column")
+                {
+                    var colStart = startTokens[0];
+                    if (colStart != "x")
+                    {
+                        throw new InvalidProgramException($"Unknown rotate col option expected 'x' got '{colStart}' command '{command}'");
+                    }
+                    var column = int.Parse(startTokens[1]);
+                    RotateColumn(column, amount);
+                }
+                else
+                {
+                    throw new InvalidProgramException($"Unknown rotate option '{option}' command '{command}'");
+                }
+            }
+            else
+            {
+                throw new InvalidProgramException($"Unknown cmd '{cmd}' command '{command}'");
+            }
+        }
+
+        static void Rect(int w, int h)
+        {
+            for (var y = 0; y < h; ++y)
+            {
+                for (var x = 0; x < w; ++x)
+                {
+                    sCells[x, y] = 1;
+                }
+            }
+        }
+
+        static void RotateRow(int row, int amount)
+        {
+            var data = new byte[sWidth];
+            for (var x = 0; x < sWidth; ++x)
+            {
+                var newX = (x + amount) % sWidth;
+                data[newX] = sCells[x, row];
+            }
+            for (var x = 0; x < sWidth; ++x)
+            {
+                sCells[x, row] = data[x];
+            }
+        }
+
+        static void RotateColumn(int column, int amount)
+        {
+            var data = new byte[sHeight];
+            for (var y = 0; y < sHeight; ++y)
+            {
+                var newY = (y + amount) % sHeight;
+                data[newY] = sCells[column, y];
+            }
+            for (var y = 0; y < sHeight; ++y)
+            {
+                sCells[column, y] = data[y];
+            }
         }
 
         public static string[] GetGrid()
         {
-            return null;
+            var result = new string[sHeight];
+            for (var y = 0; y < sHeight; ++y)
+            {
+                var line = "";
+                for (var x = 0; x < sWidth; ++x)
+                {
+                    if (sCells[x, y] == 0)
+                    {
+                        line += '.';
+                    }
+                    else if (sCells[x, y] == 1)
+                    {
+                        line += '#';
+                    }
+                    else
+                    {
+                        throw new InvalidProgramException($"Unknown cell value '{sCells[x, y]}' @ {x},{y}");
+                    }
+                }
+                result[y] = line;
+            }
+            return result;
+        }
+
+        public static int CountLit
+        {
+            get
+            {
+                var total = 0;
+                for (var x = 0; x < sWidth; ++x)
+                {
+                    for (var y = 0; y < sHeight; ++y)
+                    {
+                        total += sCells[x, y];
+                    }
+                }
+                return total;
+            }
         }
 
         public static void Run()
