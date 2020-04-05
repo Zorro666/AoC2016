@@ -57,7 +57,7 @@ namespace Day09
             var lines = AoC.Program.ReadLines(inputFile);
             if (part1)
             {
-                long result1 = TotalDecompressedLength(lines);
+                long result1 = TotalDecompressedLength(lines, false);
                 Console.WriteLine($"Day09 : Result1 {result1}");
                 long expected = 152851;
                 if (result1 != expected)
@@ -67,9 +67,9 @@ namespace Day09
             }
             else
             {
-                long result2 = -123;
+                long result2 = TotalDecompressedLength(lines, true);
                 Console.WriteLine($"Day09 : Result2 {result2}");
-                long expected = 1797;
+                long expected = 11797310782;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -162,19 +162,75 @@ namespace Day09
                     throw new InvalidProgramException($"Unknown state when decompresssing");
                 }
             }
-            DecompressedLength = decompressed.Length;
             return decompressed;
         }
 
-        public static int DecompressedLength { get; private set; }
-
-        static int TotalDecompressedLength(string[] lines)
+        public static long DecompressedLength(string compressed, bool part2)
         {
-            var total = 0;
+            var lookForLeft = true;
+            var repeatStringSource = "";
+            long length = 0;
+            var inputLength = compressed.Length;
+            for (var i = 0; i < inputLength; ++i)
+            {
+                var c = compressed[i];
+                if (char.IsWhiteSpace(c))
+                {
+                    continue;
+                }
+                else if (lookForLeft)
+                {
+                    if (c == '(')
+                    {
+                        lookForLeft = false;
+                        repeatStringSource = "";
+                    }
+                    else
+                    {
+                        length += 1;
+                    }
+                }
+                else
+                {
+                    if (c == ')')
+                    {
+                        lookForLeft = true;
+                        var tokens = repeatStringSource.Split('x');
+                        if (tokens.Length != 2)
+                        {
+                            throw new InvalidProgramException($"Invalid repeatStringSource '{repeatStringSource}' got {tokens.Length} expected 2");
+                        }
+                        var targetRepeatCharCount = int.Parse(tokens[0]);
+                        var targetRepeatCount = int.Parse(tokens[1]);
+                        if (part2)
+                        {
+                            var compressedChunk = compressed.Substring(i + 1, targetRepeatCharCount);
+                            long chunkLength = DecompressedLength(compressedChunk, part2);
+                            length += chunkLength * targetRepeatCount;
+                        }
+                        else
+                        {
+                            var repeatLen = targetRepeatCharCount * targetRepeatCount;
+                            length += repeatLen;
+                        }
+                        i += targetRepeatCharCount;
+                    }
+                    else
+                    {
+                        repeatStringSource += c;
+                    }
+                }
+            }
+            return length;
+        }
+
+
+        static long TotalDecompressedLength(string[] lines, bool part2)
+        {
+            long total = 0;
             foreach (var line in lines)
             {
-                var decompressed = Decompress(line);
-                total += DecompressedLength;
+                total += DecompressedLength(line, part2);
             }
             return total;
         }
