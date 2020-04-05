@@ -110,14 +110,21 @@ namespace Day11
 {
     class Program
     {
+        static readonly int MAX_ELEMENTS = 128;
+        static string[] sKnownGenerators = new string[MAX_ELEMENTS];
+        static string[] sKnownMicrochips = new string[MAX_ELEMENTS];
+        static int sGeneratorCount;
+        static int sMicrochipCount;
+
         private Program(string inputFile, bool part1)
         {
             var lines = AoC.Program.ReadLines(inputFile);
+            Parse(lines);
             if (part1)
             {
-                long result1 = -666;
+                var result1 = MinimumMoves;
                 Console.WriteLine($"Day11 : Result1 {result1}");
-                long expected = 280;
+                var expected = 280;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -134,6 +141,203 @@ namespace Day11
                 }
             }
         }
+
+        public static void Parse(string[] lines)
+        {
+            sGeneratorCount = 0;
+            sMicrochipCount = 0;
+            MinimumMoves = int.MaxValue;
+            /*
+            "The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.",
+            "The second floor contains a hydrogen generator.",
+            "The third floor contains a lithium generator.",
+            "The fourth floor contains nothing relevant."
+            */
+            foreach (var line in lines)
+            {
+                var tokens = line.Trim().Split(' ');
+                if (tokens[0] != "The")
+                {
+                    throw new InvalidProgramException($"Invalid line '{line}' expected 'The' got '{tokens[0]}'");
+                }
+                if (tokens[2] != "floor")
+                {
+                    throw new InvalidProgramException($"Invalid line '{line}' expected 'floor' got '{tokens[2]}'");
+                }
+                if (tokens[3] != "contains")
+                {
+                    throw new InvalidProgramException($"Invalid line '{line}' expected 'contains' got '{tokens[3]}'");
+                }
+
+                var floorToken = tokens[1];
+                int floor;
+                if (floorToken == "first")
+                {
+                    floor = 0;
+                }
+                else if (floorToken == "second")
+                {
+                    floor = 1;
+                }
+                else if (floorToken == "third")
+                {
+                    floor = 2;
+                }
+                else if (floorToken == "fourth")
+                {
+                    floor = 3;
+                }
+                else
+                {
+                    throw new InvalidProgramException($"Invalid line '{line}' unknown floor '{floorToken}'");
+                }
+                Console.Write($"Floor {floor} ");
+                if (tokens[4] == "nothing")
+                {
+                    if (tokens[5] != "relevant.")
+                    {
+                        throw new InvalidProgramException($"Invalid line '{line}' unknown token expecting `relevant.` '{tokens[5]}'");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"is empty");
+                        continue;
+                    }
+                }
+                else if (tokens[4] == "a")
+                {
+                    for (int t = 4; t < tokens.Length;)
+                    {
+                        if (tokens[t] == "and")
+                        {
+                            ++t;
+                            if (tokens[t] == "a")
+                            {
+                                ++t;
+                            }
+                            else
+                            {
+                                throw new InvalidProgramException($"Invalid line '{line}' unknown token expecting `and a` '{tokens[t - 1]} {tokens[t]}'");
+                            }
+                        }
+                        else if (tokens[t] == "a")
+                        {
+                            ++t;
+                        }
+                        var elementString = tokens[t];
+                        var typeString = tokens[t + 1];
+                        var type = "";
+                        var element = -1;
+                        if (typeString.StartsWith("microchip"))
+                        {
+                            type = "M";
+                            var toks = elementString.Split('-');
+                            if (toks[1] != "compatible")
+                            {
+                                throw new InvalidProgramException($"Invalid line '{line}' microchip element name should end with '-compatible' '{elementString}");
+                            }
+                            elementString = toks[0];
+                            for (var i = 0; i < sMicrochipCount; ++i)
+                            {
+                                if (sKnownMicrochips[i] == elementString)
+                                {
+                                    element = i;
+                                    break;
+                                }
+                            }
+                            if (element == -1)
+                            {
+                                element = sMicrochipCount;
+                                sKnownMicrochips[sMicrochipCount] = elementString;
+                                ++sMicrochipCount;
+                            }
+                        }
+                        else if (typeString.StartsWith("generator"))
+                        {
+                            type = "G";
+                            for (var i = 0; i < sGeneratorCount; ++i)
+                            {
+                                if (sKnownGenerators[i] == elementString)
+                                {
+                                    element = i;
+                                    break;
+                                }
+                            }
+                            if (element == -1)
+                            {
+                                element = sGeneratorCount;
+                                sKnownGenerators[sGeneratorCount] = elementString;
+                                ++sGeneratorCount;
+                            }
+                        }
+                        else
+                        {
+                            throw new InvalidProgramException($"Invalid line '{line}' unknown element '{elementString}' type `microchip' or 'generator'` '{typeString}'");
+                        }
+                        t += 2;
+                        Console.Write($"Found '{element}' '{type}' ");
+                    }
+                    Console.WriteLine($"");
+                }
+                else
+                {
+                    throw new InvalidProgramException($"Invalid line '{line}' unknown token expecting `nothing' or 'a'` '{tokens[4]}'");
+                }
+            }
+            for (var g = 0; g < sGeneratorCount; ++g)
+            {
+                Console.WriteLine($"Generator[{g}] '{sKnownGenerators[g]}'");
+            }
+            for (var m = 0; m < sMicrochipCount; ++m)
+            {
+                Console.WriteLine($"Microship[{m}] '{sKnownMicrochips[m]}'");
+            }
+            ValidateState();
+        }
+
+        static void ValidateState()
+        {
+            if (sGeneratorCount != sMicrochipCount)
+            {
+                throw new InvalidProgramException($"Number of generators != number of microchips {sGeneratorCount} != {sMicrochipCount}");
+            }
+            for (var g = 0; g < sGeneratorCount; ++g)
+            {
+                var generator = sKnownGenerators[g];
+                var mIndex = -1;
+                for (var m = 0; m < sMicrochipCount; ++m)
+                {
+                    if (sKnownMicrochips[m] == generator)
+                    {
+                        mIndex = m;
+                        break;
+                    }
+                }
+                if (mIndex == -1)
+                {
+                    throw new InvalidProgramException($"Microchip for '{generator}' not found");
+                }
+            }
+            for (var m = 0; m < sMicrochipCount; ++m)
+            {
+                var microchip = sKnownMicrochips[m];
+                var gIndex = -1;
+                for (var g = 0; g < sGeneratorCount; ++g)
+                {
+                    if (sKnownGenerators[g] == microchip)
+                    {
+                        gIndex = g;
+                        break;
+                    }
+                }
+                if (gIndex == -1)
+                {
+                    throw new InvalidProgramException($"Generator for '{microchip}' not found");
+                }
+            }
+        }
+
+        public static int MinimumMoves { get; private set; }
 
         public static void Run()
         {
