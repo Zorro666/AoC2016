@@ -4,19 +4,32 @@
 
 --- Day 11: Radioisotope Thermoelectric Generators ---
 
-You come upon a column of four floors that have been entirely sealed off from the rest of the building except for a small dedicated lobby. There are some radiation warnings and a big sign which reads "Radioisotope Testing Facility".
+You come upon a column of four floors that have been entirely sealed off from the rest of the building except for a small dedicated lobby. 
+There are some radiation warnings and a big sign which reads "Radioisotope Testing Facility".
 
-According to the project status board, this facility is currently being used to experiment with Radioisotope Thermoelectric Generators (RTGs, or simply "generators") that are designed to be paired with specially-constructed microchips. Basically, an RTG is a highly radioactive rock that generates electricity through heat.
+According to the project status board, this facility is currently being used to experiment with Radioisotope Thermoelectric Generators (RTGs, or simply "generators") that are designed to be paired with specially-constructed microchips. 
+Basically, an RTG is a highly radioactive rock that generates electricity through heat.
 
-The experimental RTGs have poor radiation containment, so they're dangerously radioactive. The chips are prototypes and don't have normal radiation shielding, but they do have the ability to generate an electromagnetic radiation shield when powered. Unfortunately, they can only be powered by their corresponding RTG. An RTG powering a microchip is still dangerous to other microchips.
+The experimental RTGs have poor radiation containment, so they're dangerously radioactive. 
+The chips are prototypes and don't have normal radiation shielding, but they do have the ability to generate an electromagnetic radiation shield when powered. 
+Unfortunately, they can only be powered by their corresponding RTG. 
+An RTG powering a microchip is still dangerous to other microchips.
 
-In other words, if a chip is ever left in the same area as another RTG, and it's not connected to its own RTG, the chip will be fried. Therefore, it is assumed that you will follow procedure and keep chips connected to their corresponding RTG when they're in the same room, and away from other RTGs otherwise.
+In other words, if a chip is ever left in the same area as another RTG, and it's not connected to its own RTG, the chip will be fried. 
+Therefore, it is assumed that you will follow procedure and keep chips connected to their corresponding RTG when they're in the same room, and away from other RTGs otherwise.
 
-These microchips sound very interesting and useful to your current activities, and you'd like to try to retrieve them. The fourth floor of the facility has an assembling machine which can make a self-contained, shielded computer for you to take with you - that is, if you can bring it all of the RTGs and microchips.
+These microchips sound very interesting and useful to your current activities, and you'd like to try to retrieve them. 
+The fourth floor of the facility has an assembling machine which can make a self-contained, shielded computer for you to take with you - that is, if you can bring it all of the RTGs and microchips.
 
-Within the radiation-shielded part of the facility (in which it's safe to have these pre-assembly RTGs), there is an elevator that can move between the four floors. Its capacity rating means it can carry at most yourself and two RTGs or microchips in any combination. (They're rigged to some heavy diagnostic equipment - the assembling machine will detach it for you.) As a security measure, the elevator will only function if it contains at least one RTG or microchip. The elevator always stops on each floor to recharge, and this takes long enough that the items within it and the items on that floor can irradiate each other. (You can prevent this if a Microchip and its Generator end up on the same floor in this way, as they can be connected while the elevator is recharging.)
+Within the radiation-shielded part of the facility (in which it's safe to have these pre-assembly RTGs), there is an elevator that can move between the four floors. 
+Its capacity rating means it can carry at most yourself and two RTGs or microchips in any combination. 
+(They're rigged to some heavy diagnostic equipment - the assembling machine will detach it for you.) 
+As a security measure, the elevator will only function if it contains at least one RTG or microchip. 
+The elevator always stops on each floor to recharge, and this takes long enough that the items within it and the items on that floor can irradiate each other. 
+(You can prevent this if a Microchip and its Generator end up on the same floor in this way, as they can be connected while the elevator is recharging.)
 
-You make some notes of the locations of each component of interest (your puzzle input). Before you don a hazmat suit and start moving things around, you'd like to have an idea of what you need to do.
+You make some notes of the locations of each component of interest (your puzzle input). 
+Before you don a hazmat suit and start moving things around, you'd like to have an idea of what you need to do.
 
 When you enter the containment area, you and the elevator will start on the first floor.
 
@@ -100,7 +113,8 @@ F4 E  HG HM LG LM
 F3 .  .  .  .  .  
 F2 .  .  .  .  .  
 F1 .  .  .  .  .  
-In this arrangement, it takes 11 steps to collect all of the objects at the fourth floor for assembly. (Each elevator stop counts as one step, even if nothing is added to or removed from it.)
+In this arrangement, it takes 11 steps to collect all of the objects at the fourth floor for assembly. 
+(Each elevator stop counts as one step, even if nothing is added to or removed from it.)
 
 In your situation, what is the minimum number of steps required to bring all of the objects to the fourth floor?
 
@@ -115,6 +129,9 @@ namespace Day11
         static string[] sKnownMicrochips = new string[MAX_ELEMENTS];
         static int sGeneratorCount;
         static int sMicrochipCount;
+        static int sElevatorFloor;
+        static int[] sGeneratorFloors = new int[MAX_ELEMENTS];
+        static int[] sMicrochipFloors = new int[MAX_ELEMENTS];
 
         private Program(string inputFile, bool part1)
         {
@@ -173,19 +190,19 @@ namespace Day11
                 int floor;
                 if (floorToken == "first")
                 {
-                    floor = 0;
+                    floor = 1;
                 }
                 else if (floorToken == "second")
                 {
-                    floor = 1;
+                    floor = 2;
                 }
                 else if (floorToken == "third")
                 {
-                    floor = 2;
+                    floor = 3;
                 }
                 else if (floorToken == "fourth")
                 {
-                    floor = 3;
+                    floor = 4;
                 }
                 else
                 {
@@ -241,14 +258,14 @@ namespace Day11
                             {
                                 if (sKnownMicrochips[i] == elementString)
                                 {
-                                    element = i;
-                                    break;
+                                    throw new InvalidProgramException($"Invalid line '{line}' microchip '{elementString}' already known");
                                 }
                             }
                             if (element == -1)
                             {
                                 element = sMicrochipCount;
                                 sKnownMicrochips[sMicrochipCount] = elementString;
+                                sMicrochipFloors[sMicrochipCount] = floor;
                                 ++sMicrochipCount;
                             }
                         }
@@ -259,14 +276,14 @@ namespace Day11
                             {
                                 if (sKnownGenerators[i] == elementString)
                                 {
-                                    element = i;
-                                    break;
+                                    throw new InvalidProgramException($"Invalid line '{line}' generator '{elementString}' already known");
                                 }
                             }
                             if (element == -1)
                             {
                                 element = sGeneratorCount;
                                 sKnownGenerators[sGeneratorCount] = elementString;
+                                sGeneratorFloors[sGeneratorCount] = floor;
                                 ++sGeneratorCount;
                             }
                         }
@@ -292,7 +309,57 @@ namespace Day11
             {
                 Console.WriteLine($"Microship[{m}] '{sKnownMicrochips[m]}'");
             }
+            sElevatorFloor = 1;
             ValidateState();
+
+            // Update the sGeneratorFloors generator Index to use the chip index
+            var generatorIndexToChipIndex = new int[sGeneratorCount];
+            for (var g = 0; g < sGeneratorCount; ++g)
+            {
+                generatorIndexToChipIndex[g] = -1;
+                var generator = sKnownGenerators[g];
+                for (var m = 0; m < sMicrochipCount; ++m)
+                {
+                    if (sKnownMicrochips[m] == generator)
+                    {
+                        generatorIndexToChipIndex[g] = m;
+                        break;
+                    }
+                }
+                if (generatorIndexToChipIndex[g] == -1)
+                {
+                    throw new InvalidProgramException($"Microchip for '{generator}' not found");
+                }
+            }
+            var oldGeneratorFloors = new int[sGeneratorCount];
+            for (var g = 0; g < sGeneratorCount; ++g)
+            {
+                oldGeneratorFloors[g] = sGeneratorFloors[g];
+            }
+            for (var g = 0; g < sGeneratorCount; ++g)
+            {
+                var chipIndex = generatorIndexToChipIndex[g];
+                sGeneratorFloors[chipIndex] = oldGeneratorFloors[g];
+            }
+
+            var state = GenerateState();
+            Console.WriteLine($"{state}");
+            if (!IsValidState(state))
+            {
+                throw new InvalidProgramException($"Invalid State '{state}'");
+            }
+        }
+
+        static string GenerateState()
+        {
+            var state = "";
+            state += (char)(sElevatorFloor + '0');
+            for (var c = 0; c < sMicrochipCount; ++c)
+            {
+                state += (char)(sGeneratorFloors[c] + '0');
+                state += (char)(sMicrochipFloors[c] + '0');
+            }
+            return state;
         }
 
         static void ValidateState()
@@ -335,6 +402,66 @@ namespace Day11
                     throw new InvalidProgramException($"Generator for '{microchip}' not found");
                 }
             }
+        }
+
+        //"State = "[1-4]<[1-4][1-4] x NumChips>
+        // E + 1 or 2 things
+        // G : on its own destroys things
+        // Need G+C : to protect
+        // E up 1 or down 1
+        static void ComputeValidMoves(string startingState)
+        {
+        }
+
+        // E can't be on its own
+        // Chip must be with its Generator : if a different generator is on its own
+        static bool IsValidState(string state)
+        {
+            var elevatorFloor = state[0] - '0';
+            var numChips = (state.Length - 1) / 2;
+            for (var f = 1; f <= 4; ++f)
+            {
+                var thisFloor = (char)('0' + f);
+                var onThisFloor = 0;
+                var exposedChips = 0;
+                var exposedGenerators = 0;
+                for (var c = 0; c < numChips; ++c)
+                {
+                    var i = 1 + c * 2;
+                    var genertorOnFloor = 0;
+                    var chipOnFloor = 0;
+                    if (state[i] == thisFloor)
+                    {
+                        genertorOnFloor = 1;
+                    }
+                    if (state[i + 1] == thisFloor)
+                    {
+                        chipOnFloor = 1;
+                    }
+                    if (chipOnFloor == 1)
+                    {
+                        exposedChips += chipOnFloor - genertorOnFloor;
+                    }
+                    if (genertorOnFloor == 1)
+                    {
+                        exposedGenerators += genertorOnFloor - chipOnFloor;
+                    }
+                    onThisFloor += genertorOnFloor;
+                    onThisFloor += chipOnFloor;
+                }
+                if (f == elevatorFloor)
+                {
+                    if (onThisFloor == 0)
+                    {
+                        return false;
+                    }
+                }
+                if ((exposedChips > 0) && (exposedGenerators > 0))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public static int MinimumMoves { get; private set; }
