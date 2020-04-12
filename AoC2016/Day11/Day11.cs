@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 /*
 
@@ -125,13 +126,18 @@ namespace Day11
     class Program
     {
         static readonly int MAX_ELEMENTS = 128;
-        static string[] sKnownGenerators = new string[MAX_ELEMENTS];
-        static string[] sKnownMicrochips = new string[MAX_ELEMENTS];
+        static readonly string[] sKnownGenerators = new string[MAX_ELEMENTS];
+        static readonly string[] sKnownMicrochips = new string[MAX_ELEMENTS];
         static int sGeneratorCount;
         static int sMicrochipCount;
         static int sElevatorFloor;
-        static int[] sGeneratorFloors = new int[MAX_ELEMENTS];
-        static int[] sMicrochipFloors = new int[MAX_ELEMENTS];
+        static readonly int[] sGeneratorFloors = new int[MAX_ELEMENTS];
+        static readonly int[] sMicrochipFloors = new int[MAX_ELEMENTS];
+        static readonly List<string> sVisitedStates = new List<string>(100000);
+        static readonly Dictionary<string, (string parent, int steps)> sMovesToState = new Dictionary<string, (string, int)>(100000);
+        static readonly List<string> sStatesToVisitUp = new List<string>(100000);
+        static readonly List<string> sStatesToVisitDown = new List<string>(100000);
+        static string sGoalState;
 
         private Program(string inputFile, bool part1)
         {
@@ -139,9 +145,10 @@ namespace Day11
             Parse(lines);
             if (part1)
             {
+                FindSolution();
                 var result1 = MinimumMoves;
                 Console.WriteLine($"Day11 : Result1 {result1}");
-                var expected = 280;
+                var expected = 47;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -342,22 +349,29 @@ namespace Day11
                 sGeneratorFloors[chipIndex] = oldGeneratorFloors[g];
             }
 
-            var state = GenerateState();
-            Console.WriteLine($"{state}");
-            if (!IsValidState(state))
+            var stateChars = GenerateState();
+            var stateString = new string(stateChars);
+            Console.WriteLine($"Starting State:'{stateString}'");
+            if (!IsValidState(stateChars))
             {
-                throw new InvalidProgramException($"Invalid State '{state}'");
+                throw new InvalidProgramException($"Invalid State '{stateString}'");
             }
+            var goalStateChars = new char[stateChars.Length];
+            for (var i = 0; i < stateChars.Length; ++i)
+            {
+                goalStateChars[i] = '4';
+            }
+            sGoalState = new string(goalStateChars);
         }
 
-        static string GenerateState()
+        static char[] GenerateState()
         {
-            var state = "";
-            state += (char)(sElevatorFloor + '0');
+            var state = new char[1 + sMicrochipCount * 2];
+            state[0] = (char)(sElevatorFloor + '0');
             for (var c = 0; c < sMicrochipCount; ++c)
             {
-                state += (char)(sGeneratorFloors[c] + '0');
-                state += (char)(sMicrochipFloors[c] + '0');
+                state[1 + c * 2] = (char)(sGeneratorFloors[c] + '0');
+                state[1 + c * 2 + 1] = (char)(sMicrochipFloors[c] + '0');
             }
             return state;
         }
@@ -404,18 +418,161 @@ namespace Day11
             }
         }
 
+        public static void FindSolution()
+        {
+            var stateChars = GenerateState();
+            var state = new string(stateChars);
+            int steps = 0;
+
+            sMovesToState[state] = (null, 0);
+            MinimumMoves = int.MaxValue;
+            FindGoal(state, steps);
+        }
+
+        public static void FindGoal(string state, int steps)
+        {
+            while (true)
+            {
+                if (!sVisitedStates.Contains(state))
+                {
+                    sVisitedStates.Add(state);
+                    ComputeValidMoves(state.ToCharArray(), steps);
+                }
+                if (sStatesToVisitUp.Count > 0)
+                {
+                    state = sStatesToVisitUp[0];
+                    sStatesToVisitUp.RemoveAt(0);
+                }
+                else if (sStatesToVisitDown.Count > 0)
+                {
+                    state = sStatesToVisitDown[0];
+                    sStatesToVisitDown.RemoveAt(0);
+                }
+                else if (MinimumMoves == int.MaxValue)
+                {
+                    throw new InvalidProgramException($"Could not find a solution");
+                }
+                else
+                {
+                    return;
+                }
+                (_, steps) = sMovesToState[state];
+            }
+        }
+
         //"State = "[1-4]<[1-4][1-4] x NumChips>
-        // E + 1 or 2 things
+        // E + 1 or 2 thingsgg
         // G : on its own destroys things
         // Need G+C : to protect
         // E up 1 or down 1
-        static void ComputeValidMoves(string startingState)
+        static void ComputeValidMoves(char[] state, int steps)
         {
+            var newSteps = steps + 1;
+            if (newSteps >= MinimumMoves)
+            {
+                return;
+            }
+            var thisStateString = new string(state);
+            var newStateChars = new char[state.Length];
+            var elevatorFloorChar = state[0];
+            var elevatorFloorStart = elevatorFloorChar - '0';
+            var maxNumItems = state.Length - 1;
+            var itemsToMove = new int[maxNumItems];
+            var itemsToMoveCount = 0;
+            var minFoorWithItems = int.MaxValue;
+            for (var i = 0; i < maxNumItems; ++i)
+            {
+                var itemFloorChar = state[i + 1];
+                if (itemFloorChar == elevatorFloorChar)
+                {
+                    itemsToMove[itemsToMoveCount] = i + 1;
+                    ++itemsToMoveCount;
+                }
+                var itemFloor = itemFloorChar - '0';
+                minFoorWithItems = Math.Min(minFoorWithItems, itemFloor);
+            }
+            var elevatorFloor = elevatorFloorStart + 1;
+            for (var e = 0; e < 2; ++e)
+            {
+                elevatorFloor -= (e * 2);
+                if (elevatorFloor < 1)
+                {
+                    continue;
+                }
+                if (elevatorFloor > 4)
+                {
+                    continue;
+                }
+                // Don't let elevator move items below the lowest floor that contains items
+                if (elevatorFloor < minFoorWithItems)
+                {
+                    continue;
+                }
+
+                elevatorFloorChar = (char)(elevatorFloor + '0');
+                // Iterate over moving 1 or 2 items : check if it leaves a legal floor behind
+                for (var item1 = 0; item1 < itemsToMoveCount; ++item1)
+                {
+                    var item1index = itemsToMove[item1];
+                    for (var item2 = item1; item2 < itemsToMoveCount; ++item2)
+                    {
+                        var item2index = itemsToMove[item2];
+                        state.CopyTo(newStateChars, 0);
+                        newStateChars[0] = elevatorFloorChar;
+                        newStateChars[item1index] = elevatorFloorChar;
+                        newStateChars[item2index] = elevatorFloorChar;
+                        var newStateString = new string(newStateChars);
+                        if (newStateString == sGoalState)
+                        {
+                            MinimumMoves = Math.Min(MinimumMoves, newSteps);
+                            Console.WriteLine($"GOAL Min:{MinimumMoves} This:{newSteps} {thisStateString} -> {newStateString}");
+                            //OutputGoalRoute(thisStateString);
+                        }
+                        if (IsValidState(newStateChars))
+                        {
+                            if (!sVisitedStates.Contains(newStateString))
+                            {
+                                if (e == 0)
+                                {
+                                    if (!sStatesToVisitUp.Contains(newStateString))
+                                    {
+                                        //Console.WriteLine($"UP State {newSteps} {thisStateString} -> {newStateString}");
+                                        if (elevatorFloor == 4)
+                                        {
+                                            //Console.WriteLine($"UP State {newSteps} {thisStateString} -> {newStateString}");
+                                        }
+                                        sStatesToVisitUp.Add(newStateString);
+                                    }
+                                }
+                                else
+                                {
+                                    if (!sStatesToVisitDown.Contains(newStateString))
+                                    {
+                                        //Console.WriteLine($"DOWN State {newSteps} {thisStateString} -> {newStateString}");
+                                        sStatesToVisitDown.Add(newStateString);
+                                    }
+                                }
+                            }
+                            if (sMovesToState.TryGetValue(newStateString, out (string parent, int oldSteps) oldData))
+                            {
+                                if (newSteps < oldData.oldSteps)
+                                {
+                                    sMovesToState[newStateString] = (thisStateString, newSteps);
+                                }
+                            }
+                            else
+                            {
+                                sMovesToState.Add(newStateString, (thisStateString, newSteps));
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // E can't be on its own
-        // Chip must be with its Generator : if a different generator is on its own
-        static bool IsValidState(string state)
+        // Chip must be with its own Generator to be safe : if a different generator is on the same floor
+        static bool IsValidState(char[] state)
         {
             var elevatorFloor = state[0] - '0';
             var numChips = (state.Length - 1) / 2;
@@ -424,29 +581,23 @@ namespace Day11
                 var thisFloor = (char)('0' + f);
                 var onThisFloor = 0;
                 var exposedChips = 0;
-                var exposedGenerators = 0;
+                var generatorsOnFloor = 0;
                 for (var c = 0; c < numChips; ++c)
                 {
                     var i = 1 + c * 2;
-                    var genertorOnFloor = 0;
+                    var generatorOnFloor = 0;
                     var chipOnFloor = 0;
                     if (state[i] == thisFloor)
                     {
-                        genertorOnFloor = 1;
+                        generatorOnFloor = 1;
                     }
                     if (state[i + 1] == thisFloor)
                     {
                         chipOnFloor = 1;
+                        exposedChips += (1 - generatorOnFloor);
                     }
-                    if (chipOnFloor == 1)
-                    {
-                        exposedChips += chipOnFloor - genertorOnFloor;
-                    }
-                    if (genertorOnFloor == 1)
-                    {
-                        exposedGenerators += genertorOnFloor - chipOnFloor;
-                    }
-                    onThisFloor += genertorOnFloor;
+                    generatorsOnFloor += generatorOnFloor;
+                    onThisFloor += generatorOnFloor;
                     onThisFloor += chipOnFloor;
                 }
                 if (f == elevatorFloor)
@@ -456,12 +607,44 @@ namespace Day11
                         return false;
                     }
                 }
-                if ((exposedChips > 0) && (exposedGenerators > 0))
+                if ((exposedChips > 0) && (generatorsOnFloor > 0))
                 {
                     return false;
                 }
             }
             return true;
+        }
+
+        static void OutputGoalRoute(string end)
+        {
+            List<string> route = new List<string>(128);
+            route.Add(sGoalState);
+            route.Add(end);
+            string state = end;
+            while (sMovesToState.ContainsKey(state))
+            {
+                (string parent, int steps) = sMovesToState[state];
+                if (route.Contains(parent))
+                {
+                    route.Reverse();
+                    foreach (var s in route)
+                    {
+                        Console.WriteLine($"{s}");
+                    }
+                    throw new InvalidProgramException($"Circular route {parent} -> {state}");
+                }
+                if (parent == null)
+                {
+                    break;
+                }
+                route.Add(parent);
+                state = parent;
+            };
+            route.Reverse();
+            foreach (var s in route)
+            {
+                Console.WriteLine($"{s} VALID {IsValidState(s.ToCharArray())}");
+            }
         }
 
         public static int MinimumMoves { get; private set; }
@@ -470,7 +653,7 @@ namespace Day11
         {
             Console.WriteLine("Day11 : Start");
             _ = new Program("Day11/input.txt", true);
-            _ = new Program("Day11/input.txt", false);
+            //_ = new Program("Day11/input.txt", false);
             Console.WriteLine("Day11 : End");
         }
     }

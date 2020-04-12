@@ -21,6 +21,7 @@ namespace Day11
         public void Day11(string[] lines, int expectedMinMoves)
         {
             Program.Parse(lines);
+            Program.FindSolution();
             Assert.That(Program.MinimumMoves, Is.EqualTo(expectedMinMoves));
         }
     }
