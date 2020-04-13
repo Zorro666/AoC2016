@@ -119,20 +119,38 @@ In this arrangement, it takes 11 steps to collect all of the objects at the four
 
 In your situation, what is the minimum number of steps required to bring all of the objects to the fourth floor?
 
+Your puzzle answer was 47.
+
+--- Part Two ---
+
+You step into the cleanroom separating the lobby from the isolated area and put on the hazmat suit.
+
+Upon entering the isolated containment area, however, you notice some extra parts on the first floor that weren't listed on the record outside:
+
+An elerium generator.
+An elerium-compatible microchip.
+A dilithium generator.
+A dilithium-compatible microchip.
+These work just like the other generators and microchips. You'll have to get them up to assembly as well.
+
+What is the minimum number of steps required to bring all of the objects, including these four new ones, to the fourth floor?
+
 */
 
 namespace Day11
 {
     class Program
     {
-        static readonly int MAX_ELEMENTS = 128;
-        static readonly string[] sKnownGenerators = new string[MAX_ELEMENTS];
-        static readonly string[] sKnownMicrochips = new string[MAX_ELEMENTS];
+        // 8-bits per chip : 4-bits chip, 4-bits generator
+        // 8-bits for the elevator
+        static readonly int MAX_NUM_CHIPS = sizeof(long) - 1;
+        static readonly string[] sKnownGenerators = new string[MAX_NUM_CHIPS];
+        static readonly string[] sKnownMicrochips = new string[MAX_NUM_CHIPS];
         static int sGeneratorCount;
         static int sMicrochipCount;
         static int sElevatorFloor;
-        static readonly int[] sGeneratorFloors = new int[MAX_ELEMENTS];
-        static readonly int[] sMicrochipFloors = new int[MAX_ELEMENTS];
+        static readonly int[] sGeneratorFloors = new int[MAX_NUM_CHIPS];
+        static readonly int[] sMicrochipFloors = new int[MAX_NUM_CHIPS];
         static readonly List<string> sVisitedStates = new List<string>(100000);
         static readonly Dictionary<string, (string parent, int steps)> sMovesToState = new Dictionary<string, (string, int)>(100000);
         static readonly List<string> sStatesToVisitUp = new List<string>(100000);
@@ -142,10 +160,10 @@ namespace Day11
         private Program(string inputFile, bool part1)
         {
             var lines = AoC.Program.ReadLines(inputFile);
-            Parse(lines);
+            Parse(lines, !part1);
+            FindSolution();
             if (part1)
             {
-                FindSolution();
                 var result1 = MinimumMoves;
                 Console.WriteLine($"Day11 : Result1 {result1}");
                 var expected = 47;
@@ -156,9 +174,9 @@ namespace Day11
             }
             else
             {
-                long result2 = -123;
+                var result2 = MinimumMoves;
                 Console.WriteLine($"Day11 : Result2 {result2}");
-                long expected = 1797;
+                var expected = 47;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -166,7 +184,7 @@ namespace Day11
             }
         }
 
-        public static void Parse(string[] lines)
+        public static void Parse(string[] lines, bool addExtras)
         {
             sGeneratorCount = 0;
             sMicrochipCount = 0;
@@ -274,6 +292,10 @@ namespace Day11
                                 sKnownMicrochips[sMicrochipCount] = elementString;
                                 sMicrochipFloors[sMicrochipCount] = floor;
                                 ++sMicrochipCount;
+                                if (sMicrochipCount >= MAX_NUM_CHIPS)
+                                {
+                                    throw new InvalidProgramException($"Too many microchips {sMicrochipCount} max {MAX_NUM_CHIPS}");
+                                }
                             }
                         }
                         else if (typeString.StartsWith("generator"))
@@ -292,6 +314,10 @@ namespace Day11
                                 sKnownGenerators[sGeneratorCount] = elementString;
                                 sGeneratorFloors[sGeneratorCount] = floor;
                                 ++sGeneratorCount;
+                                if (sGeneratorCount >= MAX_NUM_CHIPS)
+                                {
+                                    throw new InvalidProgramException($"Too many generators {sGeneratorCount} max {MAX_NUM_CHIPS}");
+                                }
                             }
                         }
                         else
@@ -308,6 +334,24 @@ namespace Day11
                     throw new InvalidProgramException($"Invalid line '{line}' unknown token expecting `nothing' or 'a'` '{tokens[4]}'");
                 }
             }
+
+            if (addExtras)
+            {
+                sKnownGenerators[sGeneratorCount] = "elerium";
+                sGeneratorFloors[sGeneratorCount] = 1;
+                ++sGeneratorCount;
+                sKnownMicrochips[sMicrochipCount] = "elerium";
+                sMicrochipFloors[sMicrochipCount] = 1;
+                ++sMicrochipCount;
+
+                sKnownGenerators[sGeneratorCount] = "dilithium";
+                sGeneratorFloors[sGeneratorCount] = 1;
+                ++sGeneratorCount;
+                sKnownMicrochips[sMicrochipCount] = "dilithium";
+                sMicrochipFloors[sMicrochipCount] = 1;
+                ++sMicrochipCount;
+            }
+
             for (var g = 0; g < sGeneratorCount; ++g)
             {
                 Console.WriteLine($"Generator[{g}] '{sKnownGenerators[g]}'");
@@ -349,9 +393,10 @@ namespace Day11
                 sGeneratorFloors[chipIndex] = oldGeneratorFloors[g];
             }
 
-            var stateChars = GenerateState();
-            var stateString = new string(stateChars);
+            var state = GenerateState();
+            var stateString = StateToString(state);
             Console.WriteLine($"Starting State:'{stateString}'");
+            var stateChars = stateString.ToCharArray();
             if (!IsValidState(stateChars))
             {
                 throw new InvalidProgramException($"Invalid State '{stateString}'");
@@ -364,14 +409,56 @@ namespace Day11
             sGoalState = new string(goalStateChars);
         }
 
-        static char[] GenerateState()
+        static string StateToString(long state)
         {
-            var state = new char[1 + sMicrochipCount * 2];
-            state[0] = (char)(sElevatorFloor + '0');
+            string result = "";
+            result += (char)(GetFloor(state, 0) + '0');
             for (var c = 0; c < sMicrochipCount; ++c)
             {
-                state[1 + c * 2] = (char)(sGeneratorFloors[c] + '0');
-                state[1 + c * 2 + 1] = (char)(sMicrochipFloors[c] + '0');
+                result += (char)(GetFloor(state, 1 + c * 2) + '0');
+                result += (char)(GetFloor(state, 1 + c * 2 + 1) + '0');
+            }
+            return result;
+        }
+
+        static int GetFloor(long state, int index)
+        {
+            int shift = index * 4;
+            int floor = (int)(state >> shift) & 0xF;
+            return floor;
+        }
+
+        static void SetFloor(ref long state, int index, int floor)
+        {
+            int shift = index * 4;
+            long mask = (long)0xF << shift;
+            state &= ~mask;
+            state |= (long)floor << shift;
+        }
+
+        static long GenerateState()
+        {
+            long state = 0;
+            SetFloor(ref state, 0, sElevatorFloor);
+            if (sElevatorFloor != GetFloor(state, 0))
+            {
+                throw new InvalidProgramException($"Elevator floor is wrong {GetFloor(state, 0)} Expected: {sElevatorFloor}");
+            }
+            for (var c = 0; c < sMicrochipCount; ++c)
+            {
+                SetFloor(ref state, 1 + c * 2, sGeneratorFloors[c]);
+                SetFloor(ref state, 1 + c * 2 + 1, sMicrochipFloors[c]);
+            }
+            for (var c = 0; c < sMicrochipCount; ++c)
+            {
+                if (sGeneratorFloors[c] != GetFloor(state, 1 + c * 2))
+                {
+                    throw new InvalidProgramException($"Generator floor is wrong {GetFloor(state, 1 + c * 2)} Expected: {sGeneratorFloors[c]}");
+                }
+                if (sMicrochipFloors[c] != GetFloor(state, 1 + c * 2 + 1))
+                {
+                    throw new InvalidProgramException($"Microchip floor is wrong {GetFloor(state, 1 + c * 2 + 1)} Expected: {sMicrochipFloors[c]}");
+                }
             }
             return state;
         }
@@ -420,8 +507,8 @@ namespace Day11
 
         public static void FindSolution()
         {
-            var stateChars = GenerateState();
-            var state = new string(stateChars);
+            var start = GenerateState();
+            var state = StateToString(start);
             int steps = 0;
 
             sMovesToState[state] = (null, 0);
@@ -539,7 +626,7 @@ namespace Day11
                                         //Console.WriteLine($"UP State {newSteps} {thisStateString} -> {newStateString}");
                                         if (elevatorFloor == 4)
                                         {
-                                            //Console.WriteLine($"UP State {newSteps} {thisStateString} -> {newStateString}");
+                                            Console.WriteLine($"UP State {newSteps} {thisStateString} -> {newStateString}");
                                         }
                                         sStatesToVisitUp.Add(newStateString);
                                     }
@@ -652,8 +739,8 @@ namespace Day11
         public static void Run()
         {
             Console.WriteLine("Day11 : Start");
-            _ = new Program("Day11/input.txt", true);
-            //_ = new Program("Day11/input.txt", false);
+            //_ = new Program("Day11/input.txt", true);
+            _ = new Program("Day11/input.txt", false);
             Console.WriteLine("Day11 : End");
         }
     }

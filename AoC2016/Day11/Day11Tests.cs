@@ -20,7 +20,7 @@ namespace Day11
         [TestCaseSource("TestSetupCases")]
         public void Day11(string[] lines, int expectedMinMoves)
         {
-            Program.Parse(lines);
+            Program.Parse(lines, false);
             Program.FindSolution();
             Assert.That(Program.MinimumMoves, Is.EqualTo(expectedMinMoves));
         }
