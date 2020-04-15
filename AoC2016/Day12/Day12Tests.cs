@@ -23,6 +23,7 @@ namespace Day12
         public void TestCode(string[] code, int expectedA)
         {
             Program.Parse(code);
+            Program.RunProgram();
             Assert.That(Program.A, Is.EqualTo(expectedA));
         }
     }
