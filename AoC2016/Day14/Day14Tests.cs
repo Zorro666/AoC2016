@@ -6,10 +6,11 @@ namespace Day14
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day14(string directions, int expected)
+        [TestCase("abc", 22768)]
+        public void Day14(string salt, int expectedIndex)
         {
-            Assert.Fail();
+            Program.Parse(new string[] { salt });
+            Assert.That(Program.FindIndex(64), Is.EqualTo(expectedIndex));
         }
     }
 }
