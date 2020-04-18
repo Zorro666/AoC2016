@@ -62,10 +62,8 @@ namespace Day13
         };
 
         static readonly int MAX_MAP_SIZE = 1024;
-        static int[,] sMap = new int[MAX_MAP_SIZE, MAX_MAP_SIZE];
+        static readonly int[,] sMap = new int[MAX_MAP_SIZE, MAX_MAP_SIZE];
         static (int w, int h) sMapSize;
-        static int sStartNode;
-        static int sExitNode;
         static Node[] sNodes;
         static List<int>[] sLinks;
 
@@ -82,9 +80,9 @@ namespace Day13
 
             if (part1)
             {
-                long result1 = MinSteps(31, 39);
+                var result1 = MinSteps(31, 39);
                 Console.WriteLine($"Day13 : Result1 {result1}");
-                long expected = 92;
+                var expected = 92;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -92,9 +90,9 @@ namespace Day13
             }
             else
             {
-                long result2 = -123;
+                var result2 = FindLocations(50);
                 Console.WriteLine($"Day13 : Result2 {result2}");
-                long expected = 1797;
+                var expected = 124;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -109,6 +107,7 @@ namespace Day13
                 throw new InvalidProgramException($"Invalid input only one line is supported {lines.Length}");
             }
             sFavouriteNumber = int.Parse(lines[0]);
+            GenerateMap();
         }
 
         static bool IsWall(int x, int y)
@@ -143,12 +142,10 @@ namespace Day13
                 }
             }
 
-            sMapSize.w = 50;
-            sMapSize.h = 50;
+            sMapSize.w = 64;
+            sMapSize.h = 64;
             sNodes = new Node[sMapSize.w * sMapSize.h];
             sLinks = new List<int>[sMapSize.w * sMapSize.h];
-            sStartNode = GetNodeIndex(sStartX, sStartY);
-            sExitNode = GetNodeIndex(sTargetX, sTargetY);
             for (int y = 0; y < sMapSize.h; ++y)
             {
                 for (int x = 0; x < sMapSize.w; ++x)
@@ -278,9 +275,34 @@ namespace Day13
         {
             sTargetX = targetX;
             sTargetY = targetY;
-            GenerateMap();
-            OutputMap(false);
-            return ShortestPath(sStartNode, sExitNode);
+            //OutputMap(false);
+            var startIndex = GetNodeIndex(sStartX, sStartY);
+            var endIndex = GetNodeIndex(sTargetX, sTargetY);
+            return ShortestPath(startIndex, endIndex);
+        }
+
+        static int FindLocations(int maxNumSteps)
+        {
+            var startIndex = GetNodeIndex(sStartX, sStartY);
+            var count = 0;
+            for (int y = 0; y < sStartY + maxNumSteps + 1; ++y)
+            {
+                for (int x = 0; x < sStartX + maxNumSteps + 1; ++x)
+                {
+                    int cell = sMap[x, y];
+                    if (cell == 0)
+                    {
+                        var endIndex = GetNodeIndex(x, y);
+                        var stepCount = ShortestPath(startIndex, endIndex);
+                        if ((stepCount >= 0) && (stepCount <= maxNumSteps))
+                        {
+                            //Console.WriteLine($"{x},{y} {stepCount}");
+                            ++count;
+                        }
+                    }
+                }
+            }
+            return count;
         }
 
         static int ShortestPath(int startIndex, int endIndex)
@@ -314,7 +336,7 @@ namespace Day13
                         }
                         currentNode = parentNode;
                     }
-                    Console.WriteLine($"Solved numSteps:{numSteps}");
+                    //Console.WriteLine($"Solved numSteps:{numSteps}");
                     if (numSteps < minNumSteps)
                     {
                         minNumSteps = numSteps;
