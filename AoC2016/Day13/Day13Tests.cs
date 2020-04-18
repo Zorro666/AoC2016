@@ -6,10 +6,11 @@ namespace Day13
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day13(string directions, int expected)
+        [TestCase("10", 11)]
+        public void MinSteps(string input, int expected)
         {
-            Assert.Fail();
+            Program.Parse(new string[] { input });
+            Assert.That(Program.MinSteps(7, 4), Is.EqualTo(expected));
         }
     }
 }

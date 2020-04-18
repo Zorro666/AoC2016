@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 /*
 
@@ -41,20 +42,49 @@ What is the fewest number of steps required for you to reach 31,39?
 
 Your puzzle input is 1350.
 
+Your puzzle answer was 92.
+
+--- Part Two ---
+
+How many locations (distinct x,y coordinates, including your starting location) can you reach in at most 50 steps?
+
 */
 
 namespace Day13
 {
     class Program
     {
+        struct Node
+        {
+            public int x;
+            public int y;
+            public int type;
+        };
+
+        static readonly int MAX_MAP_SIZE = 1024;
+        static int[,] sMap = new int[MAX_MAP_SIZE, MAX_MAP_SIZE];
+        static (int w, int h) sMapSize;
+        static int sStartNode;
+        static int sExitNode;
+        static Node[] sNodes;
+        static List<int>[] sLinks;
+
+        static int sFavouriteNumber;
+        static readonly int sStartX = 1;
+        static readonly int sStartY = 1;
+        static int sTargetX;
+        static int sTargetY;
+
         private Program(string inputFile, bool part1)
         {
             var lines = AoC.Program.ReadLines(inputFile);
+            Parse(lines);
+
             if (part1)
             {
-                long result1 = -666;
+                long result1 = MinSteps(31, 39);
                 Console.WriteLine($"Day13 : Result1 {result1}");
-                long expected = 280;
+                long expected = 92;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -70,6 +100,243 @@ namespace Day13
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
                 }
             }
+        }
+
+        public static void Parse(string[] lines)
+        {
+            if (lines.Length > 1)
+            {
+                throw new InvalidProgramException($"Invalid input only one line is supported {lines.Length}");
+            }
+            sFavouriteNumber = int.Parse(lines[0]);
+        }
+
+        static bool IsWall(int x, int y)
+        {
+            if (x < 0)
+            {
+                return true;
+            }
+            if (y < 0)
+            {
+                return true;
+            }
+            var sum = x * x + 3 * x + 2 * x * y + y + y * y;
+            sum += sFavouriteNumber;
+
+            var countOneBits = 0;
+            while (sum != 0)
+            {
+                ++countOneBits;
+                sum &= (sum - 1);
+            };
+            return (countOneBits & 1) == 1;
+        }
+
+        static void GenerateMap()
+        {
+            for (int y = 0; y < MAX_MAP_SIZE; ++y)
+            {
+                for (int x = 0; x < MAX_MAP_SIZE; ++x)
+                {
+                    sMap[x, y] = -1;
+                }
+            }
+
+            sMapSize.w = 50;
+            sMapSize.h = 50;
+            sNodes = new Node[sMapSize.w * sMapSize.h];
+            sLinks = new List<int>[sMapSize.w * sMapSize.h];
+            sStartNode = GetNodeIndex(sStartX, sStartY);
+            sExitNode = GetNodeIndex(sTargetX, sTargetY);
+            for (int y = 0; y < sMapSize.h; ++y)
+            {
+                for (int x = 0; x < sMapSize.w; ++x)
+                {
+                    sMap[x, y] = IsWall(x, y) ? 1 : 0;
+                    var nodeIndex = GetNodeIndex(x, y);
+                    sNodes[nodeIndex].x = x;
+                    sNodes[nodeIndex].y = y;
+                    sNodes[nodeIndex].type = sMap[x, y];
+                }
+            }
+
+            for (int y = 0; y < sMapSize.h; ++y)
+            {
+                for (int x = 0; x < sMapSize.w; ++x)
+                {
+                    var nodeIndex = x + y * sMapSize.w;
+                    int cell = sMap[x, y];
+
+                    sLinks[nodeIndex] = new List<int>();
+                    sLinks[nodeIndex].Clear();
+                    if (cell == -1)
+                    {
+                        continue;
+                    }
+                    if (cell == 1)
+                    {
+                        continue;
+                    }
+                    if ((x - 1 >= 0) && (sMap[x - 1, y] != 1))
+                    {
+                        var targetNodeIndex = x - 1 + y * sMapSize.w;
+                        sLinks[nodeIndex].Add(targetNodeIndex);
+                    }
+                    if ((x + 1 < sMapSize.w) && (sMap[x + 1, y] != 1))
+                    {
+                        var targetNodeIndex = x + 1 + y * sMapSize.w;
+                        sLinks[nodeIndex].Add(targetNodeIndex);
+                    }
+                    if ((y - 1 >= 0) && (sMap[x, y - 1] != 1))
+                    {
+                        var targetNodeIndex = x + (y - 1) * sMapSize.w;
+                        sLinks[nodeIndex].Add(targetNodeIndex);
+                    }
+                    if ((y + 1 < sMapSize.h) && (sMap[x, y + 1] != 1))
+                    {
+                        var targetNodeIndex = x + (y + 1) * sMapSize.w;
+                        sLinks[nodeIndex].Add(targetNodeIndex);
+                    }
+                }
+            }
+        }
+
+        public static void OutputMap(bool detailed)
+        {
+            for (int y = 0; y < sMapSize.h; ++y)
+            {
+                string line = "";
+                for (int x = 0; x < sMapSize.w; ++x)
+                {
+                    int cell = sMap[x, y];
+                    if ((x == sStartX) && (y == sStartY))
+                    {
+                        line += 'S';
+                    }
+                    else if ((x == sTargetX) && (y == sTargetY))
+                    {
+                        line += 'E';
+                    }
+                    else if (cell == -1)
+                    {
+                        line += ' ';
+                    }
+                    else if (cell == 0)
+                    {
+                        line += '.';
+                    }
+                    else if (cell == 1)
+                    {
+                        line += '#';
+                    }
+                    else
+                    {
+                        throw new InvalidProgramException($"Unknown map[{x},{y}] {cell}");
+                    }
+                }
+                Console.WriteLine($"{line}");
+            }
+
+            if (detailed)
+            {
+                for (int nodeIndex = 0; nodeIndex < sNodes.Length; ++nodeIndex)
+                {
+                    var node = sNodes[nodeIndex];
+                    Console.WriteLine($"Node:{node.x},{node.y} {node.type}");
+                    foreach (var linkTargetIndex in sLinks[nodeIndex])
+                    {
+                        (int linkX, int linkY) = GetXYFromNodeIndex(linkTargetIndex);
+                        Console.WriteLine($"Link:{linkTargetIndex} {linkX},{linkY}");
+                    }
+                }
+            }
+            Console.WriteLine($"Map Dimensions:{sMapSize.w} x {sMapSize.h}");
+        }
+
+        static int GetNodeIndex(int x, int y)
+        {
+            if ((x < 0) || (x >= sMapSize.w))
+            {
+                throw new ArgumentOutOfRangeException("x", $"Invalid value {x} out of range 0-{sMapSize.w}");
+            }
+            if ((y < 0) || (y >= sMapSize.h))
+            {
+                throw new ArgumentOutOfRangeException("y", $"Invalid value {y} out of range 0-{sMapSize.h}");
+            }
+            return x + y * sMapSize.w;
+        }
+
+        static (int, int) GetXYFromNodeIndex(int nodeIndex)
+        {
+            int x = nodeIndex % sMapSize.w;
+            int y = nodeIndex / sMapSize.w;
+            return (x, y);
+        }
+
+        public static int MinSteps(int targetX, int targetY)
+        {
+            sTargetX = targetX;
+            sTargetY = targetY;
+            GenerateMap();
+            OutputMap(false);
+            return ShortestPath(sStartNode, sExitNode);
+        }
+
+        static int ShortestPath(int startIndex, int endIndex)
+        {
+            //(int fromX, int fromY) = GetXYFromNodeIndex(startIndex);
+            //Console.WriteLine($"ShortestPath Start {startIndex} {fromX},{fromY}");
+            Queue<int> nodesToVisit = new Queue<int>();
+            nodesToVisit.Enqueue(startIndex);
+            List<int> visited = new List<int>(sNodes.Length * 100);
+            Dictionary<int, int> parents = new Dictionary<int, int>(sNodes.Length * 100);
+            int minNumSteps = int.MaxValue;
+            while (nodesToVisit.Count > 0)
+            {
+                var nodeIndex = nodesToVisit.Dequeue();
+                //(int x, int y) = GetXYFromNodeIndex(nodeIndex);
+                //Console.WriteLine($"Node:{nodeIndex} {x},{y}");
+                if (nodeIndex == endIndex)
+                {
+                    int numSteps = 0;
+                    int currentNode = endIndex;
+                    bool foundParent = true;
+                    while (foundParent)
+                    {
+                        //(x, y) = GetXYFromNodeIndex(currentNodeIndex);
+                        //Console.WriteLine($"Node:{currentNodeIndex} {x},{y}");
+                        numSteps++;
+                        foundParent = parents.TryGetValue(currentNode, out var parentNode);
+                        if (parentNode == startIndex)
+                        {
+                            break;
+                        }
+                        currentNode = parentNode;
+                    }
+                    Console.WriteLine($"Solved numSteps:{numSteps}");
+                    if (numSteps < minNumSteps)
+                    {
+                        minNumSteps = numSteps;
+                    }
+                }
+
+                foreach (var link in sLinks[nodeIndex])
+                {
+                    if (!visited.Contains(link))
+                    {
+                        visited.Add(link);
+                        nodesToVisit.Enqueue(link);
+                        parents[link] = nodeIndex;
+                    }
+                }
+            };
+
+            if (minNumSteps < int.MaxValue)
+            {
+                return minNumSteps;
+            }
+            return -1;
         }
 
         public static void Run()
