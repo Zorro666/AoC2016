@@ -61,6 +61,12 @@ In ten rows, this larger example has 38 safe tiles.
 
 Starting with the map in your puzzle input, in a total of 40 rows (including the starting row), how many safe tiles are there?
 
+Your puzzle answer was 1956.
+
+--- Part Two ---
+
+How many safe tiles are there in a total of 400000 rows?
+
 */
 
 namespace Day18
@@ -70,11 +76,16 @@ namespace Day18
         private Program(string inputFile, bool part1)
         {
             var lines = AoC.Program.ReadLines(inputFile);
+            if (lines.Length != 1)
+            {
+                throw new InvalidProgramException($"Expected input to be one line {lines.Length}");
+            }
+            var start = lines[0];
             if (part1)
             {
-                long result1 = -666;
+                var result1 = CountSafeTiles(start, 40);
                 Console.WriteLine($"Day18 : Result1 {result1}");
-                long expected = 280;
+                var expected = 1956;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -82,9 +93,9 @@ namespace Day18
             }
             else
             {
-                long result2 = -123;
+                var result2 = CountSafeTiles(start, 400000);
                 Console.WriteLine($"Day18 : Result2 {result2}");
-                long expected = 1797;
+                var expected = 19995121;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -92,14 +103,73 @@ namespace Day18
             }
         }
 
+        static string ComputeNewRow(string row)
+        {
+            var newRow = "";
+            for (var i = 0; i < row.Length; ++i)
+            {
+                var left = (i > 0) ? row[i - 1] : '.';
+                var centre = row[i];
+                var right = (i < row.Length - 1) ? row[i + 1] : '.';
+                var leftTrap = left == '^';
+                var centreTrap = centre == '^';
+                var rightTrap = right == '^';
+                var c = '.';
+                if (leftTrap && centreTrap && !rightTrap)
+                {
+                    c = '^';
+                }
+                else if (!leftTrap && centreTrap && rightTrap)
+                {
+                    c = '^';
+                }
+                else if (leftTrap && !centreTrap && !rightTrap)
+                {
+                    c = '^';
+                }
+                else if (!leftTrap && !centreTrap && rightTrap)
+                {
+                    c = '^';
+                }
+                newRow += c;
+            }
+            return newRow;
+        }
+
         public static string ComputeRow(string start, int rowCount)
         {
-            return "";
+            var row = start;
+            for (var r = 0; r < rowCount; ++r)
+            {
+                row = ComputeNewRow(row);
+            }
+            return row;
+        }
+
+        static int CountSafe(string row)
+        {
+            var count = 0;
+            for (var i = 0; i < row.Length; ++i)
+            {
+                if (row[i] == '.')
+                {
+                    ++count;
+                }
+            }
+            return count;
         }
 
         public static int CountSafeTiles(string start, int rowCount)
         {
-            return -1;
+            var count = 0;
+            var row = start;
+            count += CountSafe(row);
+            for (var r = 0; r < rowCount - 1; ++r)
+            {
+                row = ComputeNewRow(row);
+                count += CountSafe(row);
+            }
+            return count;
         }
 
         public static void Run()

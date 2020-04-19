@@ -26,7 +26,7 @@ namespace Day18
         [Test]
         [TestCase("..^^.", 3, 6, TestName = "Small Count 6")]
         [TestCase(".^^.^.^^^^", 10, 38, TestName = "Large Count 38")]
-        public void CountSafeTiles(string start, int rowCount, string expectedSafeTiles)
+        public void CountSafeTiles(string start, int rowCount, int expectedSafeTiles)
         {
             Assert.That(Program.CountSafeTiles(start, rowCount), Is.EqualTo(expectedSafeTiles));
         }
