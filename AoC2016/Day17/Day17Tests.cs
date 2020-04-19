@@ -6,10 +6,21 @@ namespace Day17
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day17(string directions, int expected)
+        [TestCase("ihgpwlah", "DDRRRD")]
+        [TestCase("kglvqrro", "DDUDRLRRUDRD")]
+        [TestCase("ulqzkmiv", "DRURDRUDDLLDLUURRDULRLDUUDDDRR")]
+        public void ShortestPath(string passcode, string expectedPath)
         {
-            Assert.Fail();
+            Assert.That(Program.ShortestPath(passcode), Is.EqualTo(expectedPath));
+        }
+
+        [Test]
+        [TestCase("ihgpwlah", 370)]
+        [TestCase("kglvqrro", 492)]
+        [TestCase("ulqzkmiv", 830)]
+        public void LongestSteps(string passcode, int expectedSteps)
+        {
+            Assert.That(Program.LongestSteps(passcode), Is.EqualTo(expectedSteps));
         }
     }
 }
