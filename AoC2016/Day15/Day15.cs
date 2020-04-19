@@ -52,7 +52,7 @@ namespace Day15
 {
     class Program
     {
-        readonly static int MAX_NUM_DISCS = 16;
+        static readonly int MAX_NUM_DISCS = 16;
         static int[] sIDs = new int[MAX_NUM_DISCS];
         static int[] sNumPositions = new int[MAX_NUM_DISCS];
         static int[] sStartTimes = new int[MAX_NUM_DISCS];

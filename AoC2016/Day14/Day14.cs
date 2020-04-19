@@ -73,7 +73,7 @@ namespace Day14
     {
         static string sSalt;
         static MD5 sMD5;
-        readonly static Dictionary<int, string> sComputedMD5s = new Dictionary<int, string>(500000);
+        private static readonly Dictionary<int, string> sComputedMD5s = new Dictionary<int, string>(500000);
 
         private Program(string inputFile, bool part1)
         {
