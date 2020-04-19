@@ -6,10 +6,10 @@ namespace Day19
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day19(string directions, int expected)
+        [TestCase(5, 3)]
+        public void ElfWithPresents(int elfCount, int expectedElf)
         {
-            Assert.Fail();
+            Assert.That(Program.ElfWithPresents(elfCount), Is.EqualTo(expectedElf));
         }
     }
 }
