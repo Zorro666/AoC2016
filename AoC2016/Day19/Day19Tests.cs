@@ -6,10 +6,11 @@ namespace Day19
     public class Tests
     {
         [Test]
-        [TestCase(5, 3)]
-        public void ElfWithPresents(int elfCount, int expectedElf)
+        [TestCase(5, false, 3)]
+        [TestCase(5, true, 2)]
+        public void ElfWithPresents(int elfCount, bool steal, int expectedElf)
         {
-            Assert.That(Program.ElfWithPresents(elfCount), Is.EqualTo(expectedElf));
+            Assert.That(Program.ElfWithPresents(elfCount, steal), Is.EqualTo(expectedElf));
         }
     }
 }
