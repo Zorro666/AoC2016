@@ -6,10 +6,11 @@ namespace Day20
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day20(string directions, int expected)
+        [TestCase(new string[] { "5-8", "0-2", "4-7" }, 3U)]
+        public void MinUnused(string[] lines, uint expected)
         {
-            Assert.Fail();
+            Program.Parse(lines);
+            Assert.That(Program.FindMin(), Is.EqualTo(expected));
         }
     }
 }
