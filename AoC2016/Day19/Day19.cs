@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 
 /*
 
@@ -95,7 +96,7 @@ namespace Day19
             {
                 var result2 = ElfWithPresents(elfCount, true);
                 Console.WriteLine($"Day19 : Result2 {result2}");
-                var expected = 1797;
+                var expected = 1410630;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -119,7 +120,7 @@ namespace Day19
                 do
                 {
                     e = (e + 1) % count;
-                } while (IsZeroNonZeroElf(e));
+                } while (sNonZeroElvesBitArray[e] == false);
                 ++numOnesFound;
             }
             if (e == start)
@@ -129,30 +130,17 @@ namespace Day19
             return e;
         }
 
-        static void ClearNonZeroElf(int e)
-        {
-            sNonZeroElvesBitArray[e] = false;
-        }
-
-        static void SetNonZeroElf(int e)
-        {
-            sNonZeroElvesBitArray[e] = true;
-        }
-
-        static bool IsZeroNonZeroElf(int e)
-        {
-            return (sNonZeroElvesBitArray[e] == false);
-        }
-
         public static int ElfWithPresents(int elfCount, bool steal)
         {
             var nonZeroElvesCount = elfCount;
             var presentsPerElf = new int[elfCount];
+            List<int> sNonZeroElves = new List<int>(elfCount);
 
             for (var e = 0; e < elfCount; ++e)
             {
                 presentsPerElf[e] = 1;
-                SetNonZeroElf(e);
+                sNonZeroElves.Add(e);
+                sNonZeroElvesBitArray[e] = true;
             }
 
             int elfWithAllPresents = -1;
@@ -161,7 +149,73 @@ namespace Day19
                 Console.WriteLine($"nonZeroElvesCount:{nonZeroElvesCount}");
                 for (var e = 0; e < elfCount; ++e)
                 {
-                    if (IsZeroNonZeroElf(e))
+                    if (sNonZeroElvesBitArray[e] == false)
+                    {
+                        continue;
+                    }
+                    if (e % 50000 == 0)
+                    {
+                        Console.WriteLine($"elf:{e}");
+                    }
+                    int elvesToSkip = 1;
+                    if (steal)
+                    {
+                        elvesToSkip = nonZeroElvesCount / 2;
+                    }
+                    int index = sNonZeroElves.IndexOf(e);
+                    int nextElfIndex = index + elvesToSkip;
+                    nextElfIndex %= sNonZeroElves.Count;
+                    int nextElf = sNonZeroElves[nextElfIndex];
+
+                    if (nextElf == e)
+                    {
+                        elfWithAllPresents = e;
+                        if (nonZeroElvesCount != 1)
+                        {
+                            throw new InvalidProgramException($"Invalid nonzeroElvesCount {nonZeroElvesCount}");
+                        }
+                    }
+                    else
+                    {
+                        var presentsToAdd = presentsPerElf[nextElf];
+                        if (presentsToAdd == 0)
+                        {
+                            throw new InvalidProgramException($"Invalid presentsToAdd {presentsToAdd}");
+                        }
+                        presentsPerElf[e] += presentsToAdd;
+                        presentsPerElf[nextElf] = 0;
+                        sNonZeroElvesBitArray[nextElf] = false;
+                        sNonZeroElves.RemoveAt(nextElfIndex);
+                        --nonZeroElvesCount;
+                        if (nonZeroElvesCount == 1)
+                        {
+                            elfWithAllPresents = e;
+                        }
+                    }
+                }
+            };
+            // Elf position starts at 1 not 0
+            return elfWithAllPresents + 1;
+        }
+
+        public static int ElfWithPresentsSlow(int elfCount, bool steal)
+        {
+            var nonZeroElvesCount = elfCount;
+            var presentsPerElf = new int[elfCount];
+
+            for (var e = 0; e < elfCount; ++e)
+            {
+                presentsPerElf[e] = 1;
+                sNonZeroElvesBitArray[e] = true;
+            }
+
+            int elfWithAllPresents = -1;
+            while (elfWithAllPresents == -1)
+            {
+                Console.WriteLine($"nonZeroElvesCount:{nonZeroElvesCount}");
+                for (var e = 0; e < elfCount; ++e)
+                {
+                    if (sNonZeroElvesBitArray[e] == false)
                     {
                         continue;
                     }
@@ -193,8 +247,8 @@ namespace Day19
                         }
                         presentsPerElf[e] += presentsToAdd;
                         presentsPerElf[nextElf] = 0;
+                        sNonZeroElvesBitArray[nextElf] = false;
                         --nonZeroElvesCount;
-                        ClearNonZeroElf(nextElf);
                         if (nonZeroElvesCount == 1)
                         {
                             elfWithAllPresents = e;
