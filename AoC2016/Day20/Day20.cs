@@ -53,7 +53,7 @@ namespace Day20
             {
                 var result2 = CountAllowed();
                 Console.WriteLine($"Day20 : Result2 {result2}");
-                var expected = 1797;
+                var expected = 104;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -73,11 +73,13 @@ namespace Day20
                 uint end = uint.Parse(tokens[1]);
                 sStarts[i] = start;
                 sEnds[i] = end;
+                //Console.WriteLine($"Range[{i}] {sStarts[i]} -> {sEnds[i]}");
                 ++i;
             }
-            for (i = 0; i < lines.Length - 1; ++i)
+
+            for (i = 0; i < sStarts.Length - 1; ++i)
             {
-                for (var j = i + 1; j < lines.Length; ++j)
+                for (var j = i + 1; j < sStarts.Length; ++j)
                 {
                     var startI = sStarts[i];
                     var startJ = sStarts[j];
@@ -91,6 +93,10 @@ namespace Day20
                         sEnds[j] = endI;
                     }
                 }
+            }
+            for (i = 0; i < sStarts.Length; ++i)
+            {
+                //Console.WriteLine($"Range[{i}] {sStarts[i]} -> {sEnds[i]}");
             }
         }
 
@@ -113,6 +119,14 @@ namespace Day20
         {
             var startI = sStarts[i];
             var endI = sEnds[i];
+            if ((sStarts[i] == 0) && (sEnds[i] == 0))
+            {
+                return false;
+            }
+            if (endI != uint.MaxValue)
+            {
+                ++endI;
+            }
             for (var j = i + 1; j < sStarts.Length; ++j)
             {
                 var startJ = sStarts[j];
@@ -121,16 +135,23 @@ namespace Day20
                 {
                     return false;
                 }
+                if ((sStarts[j] == 0) && (sEnds[j] == 0))
+                {
+                    return false;
+                }
                 if ((startJ >= startI) && (startJ <= endI))
                 {
-                    sEnds[i] = endJ;
+                    if (endJ > sEnds[i])
+                    {
+                        sEnds[i] = endJ;
+                    }
                     for (var k = j; k < sStarts.Length - 1; ++k)
                     {
                         sStarts[k] = sStarts[k + 1];
                         sEnds[k] = sEnds[k + 1];
                     }
-                    sStarts[sStarts.Length - 1] = uint.MaxValue;
-                    sEnds[sStarts.Length - 1] = uint.MaxValue;
+                    sStarts[^1] = 0;
+                    sEnds[^1] = 0;
                     return true;
                 }
             }
@@ -139,7 +160,7 @@ namespace Day20
 
         static void MergeRanges()
         {
-            for (var i = 0; i < sStarts.Length - 1; ++i)
+            for (var i = 0; i < sStarts.Length; ++i)
             {
                 while (CanMergeRange(i)) ;
             }
@@ -148,11 +169,24 @@ namespace Day20
         public static uint CountAllowed()
         {
             MergeRanges();
-            for (var i = 0; i < sStarts.Length; ++i)
+            var count = 0U;
+            var previousEnd = sEnds[0];
+            for (var i = 1; i < sStarts.Length; ++i)
             {
-                Console.WriteLine($"Range[{i}] {sStarts[i]} -> {sEnds[i]}");
+                if ((sStarts[i] != 0) || (sEnds[i] != 0))
+                {
+                    var delta = sStarts[i] - (previousEnd + 1);
+                    count += delta;
+                    previousEnd = sEnds[i];
+                    //Console.WriteLine($"Range[{i}] {sStarts[i]} -> {sEnds[i]} count {count} delta {delta}");
+                }
             }
-            return 0;
+            if (previousEnd < uint.MaxValue)
+            {
+                count += uint.MaxValue - (previousEnd + 1);
+            }
+            //Console.WriteLine($"count {count}");
+            return count;
         }
 
         public static void Run()
