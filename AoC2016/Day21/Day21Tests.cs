@@ -10,6 +10,7 @@ namespace Day21
         [TestCase("swap letter d with letter b", "ebcda", "edcba")]
         [TestCase("reverse positions 0 through 4", "edcba", "abcde")]
         [TestCase("rotate left 1 step", "abcde", "bcdea")]
+        [TestCase("rotate right 1 step", "abcde", "eabcd")]
         [TestCase("move position 1 to position 4", "bcdea", "bdeac")]
         [TestCase("move position 3 to position 0", "bdeac", "abdec")]
         [TestCase("rotate based on position of letter b", "abdec", "ecabd")]
