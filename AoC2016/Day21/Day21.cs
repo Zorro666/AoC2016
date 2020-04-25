@@ -63,12 +63,13 @@ namespace Day21
         {
             var lines = AoC.Program.ReadLines(inputFile);
             Parse(lines);
-            var start = "abcdefgh";
-            var scramble = Scramble(start);
+            var start = "abcdefgh".ToCharArray();
+            var scramble = new char[start.Length];
+            Scramble(start, ref scramble);
 
             if (part1)
             {
-                var result1 = scramble;
+                var result1 = new string(scramble);
                 Console.WriteLine($"Day21 : Result1 {result1}");
                 var expected = "dgfaehcb";
                 if (result1 != expected)
@@ -78,15 +79,18 @@ namespace Day21
             }
             else
             {
-                var scramble2 = "fbgdceah";
-                var result2 = UnScramble(start, scramble, scramble2);
-                var checkScramble2 = Scramble(result2);
-                if (checkScramble2 != scramble2)
+                var scramble2 = "fbgdceah".ToCharArray();
+                var unscramble2 = new char[scramble2.Length];
+                UnScramble(in scramble2, ref unscramble2);
+                var checkScramble2 = new char[scramble2.Length];
+                Scramble(unscramble2, ref checkScramble2);
+                if (new string(checkScramble2) != new string(scramble2))
                 {
-                    throw new InvalidProgramException($"Part2 is broken {checkScramble2} != {scramble2}");
+                    throw new InvalidProgramException($"Part2 is broken {new string(checkScramble2)} != {new string(scramble2)}");
                 }
+                var result2 = new string(unscramble2);
                 Console.WriteLine($"Day21 : Result2 {result2}");
-                var expected = "dhafcgbe";
+                var expected = "fdhgacbe";
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -94,30 +98,82 @@ namespace Day21
             }
         }
 
-        public static string UnScramble(string inputA, string scrambleA, string scrambledInput)
+        public static void UnScramble(in char[] scrambled, ref char[] unscrambled)
         {
-            if (inputA.Length != scrambleA.Length)
+            var wordLength = scrambled.Length;
+            var testInput = new char[wordLength];
+            var testResult = new char[wordLength];
+            var counts = new int[wordLength];
+            for (var i = 0; i < wordLength; ++i)
             {
-                throw new InvalidProgramException($"UnScramble inputA and scrambleA Lengths do not match {inputA.Length} != {scrambleA.Length}");
+                testInput[i] = (char)('a' + i);
             }
-            if (scrambledInput.Length != scrambleA.Length)
-            {
-                throw new InvalidProgramException($"UnScramble scrambledInput and scrambleA Lengths do not match {scrambledInput.Length} != {scrambleA.Length}");
-            }
+            bool doMore = true;
 
-            int[] inputToOutputIndexes = new int[inputA.Length];
-            for (var inputIndex = 0; inputIndex < inputA.Length; ++inputIndex)
+            do
             {
-                var inputLetter = inputA[inputIndex];
-                inputToOutputIndexes[inputIndex] = scrambleA.IndexOf(inputLetter);
+                Scramble(testInput, ref testResult);
+                bool same = true;
+                for (var i = 0; i < wordLength; ++i)
+                {
+                    if (testResult[i] != scrambled[i])
+                    {
+                        same = false;
+                        break;
+                    }
+                }
+                if (same == true)
+                {
+                    unscrambled = testInput;
+                    return;
+                }
+                bool validCombination = false;
+                // Next combination
+                while (!validCombination)
+                {
+                    int carry = 1;
+                    for (var i = 0; i < wordLength; ++i)
+                    {
+                        int oldValue = testInput[i] - 'a';
+                        int newValue = oldValue + carry;
+                        if (newValue >= wordLength)
+                        {
+                            carry = 1;
+                            newValue = 0;
+                        }
+                        else
+                        {
+                            carry = 0;
+                        }
+                        testInput[i] = (char)('a' + newValue);
+                        if (carry == 0)
+                        {
+                            break;
+                        }
+                    }
+                    for (var i = 0; i < wordLength; ++i)
+                    {
+                        counts[i] = 0;
+                    }
+
+                    for (var i = 0; i < wordLength; ++i)
+                    {
+                        int value = testInput[i] - 'a';
+                        counts[value] = 1;
+                    }
+                    validCombination = true;
+                    for (var i = 0; i < wordLength; ++i)
+                    {
+                        if (counts[i] != 1)
+                        {
+                            validCombination = false;
+                            break;
+                        }
+                    }
+                }
             }
-            var unscrambledChars = scrambledInput.ToCharArray();
-            for (var inputIndex = 0; inputIndex < inputA.Length; ++inputIndex)
-            {
-                var outputIndex = inputToOutputIndexes[inputIndex];
-                unscrambledChars[inputIndex] = scrambledInput[outputIndex];
-            }
-            return new string(unscrambledChars);
+            while (doMore);
+            throw new InvalidProgramException($"UnScramble failed to find an answer");
         }
 
         public static void Parse(string[] lines)
@@ -129,16 +185,58 @@ namespace Day21
             }
         }
 
-        public static string Scramble(string start)
+        static void CheckBuffer(char[] buffer)
         {
-            var input = start;
-            string output = null;
+            var bufferLength = buffer.Length;
+            var counts = new int[bufferLength];
+            for (var i = 0; i < bufferLength; ++i)
+            {
+                var c = buffer[i];
+                var cIndex = c - 'a';
+                if ((cIndex < 0) || (cIndex > bufferLength))
+                {
+                    throw new InvalidProgramException($"CheckBuffer failed [{i}] '{cIndex}' range {0} -> {bufferLength}");
+                }
+                counts[cIndex] = 1;
+            }
+            for (var i = 0; i < bufferLength; ++i)
+            {
+                if (counts[i] != 1)
+                {
+                    throw new InvalidProgramException($"CheckBuffer failed [{i}] Count {counts[i]}");
+                }
+            }
+        }
+
+        public static void Scramble(in char[] start, ref char[] output)
+        {
+            var numChars = start.Length;
+            char[] buffer1 = new char[start.Length];
+            char[] buffer2 = new char[start.Length];
+            for (var i = 0; i < numChars; ++i)
+            {
+                var c = start[i];
+                buffer1[i] = c;
+                buffer2[i] = c;
+            }
+            var buffers = new char[2][] { buffer1, buffer2 };
+            var inIndex = 0;
+            var outIndex = 1;
             foreach (var operation in sOperations)
             {
-                output = ProcessOperation(operation, input);
-                input = output;
+                var temp = inIndex;
+                inIndex = outIndex;
+                outIndex = temp;
+                ProcessOperation(operation, buffers[inIndex], ref buffers[outIndex]);
+                CheckBuffer(buffer1);
+                CheckBuffer(buffer2);
             }
-            return output;
+            for (var i = 0; i < numChars; ++i)
+            {
+                var outputBuffer = buffers[outIndex];
+                var c = outputBuffer[i];
+                output[i] = c;
+            }
         }
 
         static char ParseLetter(string letterText)
@@ -161,11 +259,24 @@ namespace Day21
             return index;
         }
 
-        static string ProcessOperation(Operation operation, string input)
+        static int FindIndexOf(in char[] input, in char letter)
         {
-            var inputChars = input.ToCharArray();
-            var outputChars = input.ToCharArray();
+            for (var i = 0; i < input.Length; ++i)
+            {
+                if (input[i] == letter)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
 
+        static void ProcessOperation(Operation operation, in char[] input, ref char[] output)
+        {
+            for (var i = 0; i < input.Length; ++i)
+            {
+                output[i] = input[i];
+            }
             var cmd = operation.command;
             if (cmd == Operation.Command.SWAP)
             {
@@ -173,17 +284,21 @@ namespace Day21
                 var indexB = operation.indexB;
                 if ((indexA < 0) && (indexB < 0))
                 {
-                    indexA = input.IndexOf(operation.letterA);
-                    indexB = input.IndexOf(operation.letterB);
+                    indexA = FindIndexOf(input, operation.letterA);
+                    indexB = FindIndexOf(input, operation.letterB);
                 }
                 if ((indexA < 0) || (indexA >= input.Length))
                 {
-                    throw new InvalidProgramException($"Invalid index {indexA} {indexB} range:0-{input.Length}");
+                    throw new InvalidProgramException($"Invalid indexA {indexA} range:0-{input.Length}");
                 }
-                var charA = inputChars[indexA];
-                var charB = inputChars[indexB];
-                outputChars[indexB] = charA;
-                outputChars[indexA] = charB;
+                if ((indexB < 0) || (indexB >= input.Length))
+                {
+                    throw new InvalidProgramException($"Invalid indexB {indexB} range:0-{input.Length}");
+                }
+                var charA = input[indexA];
+                var charB = input[indexB];
+                output[indexB] = charA;
+                output[indexA] = charB;
             }
             else if (cmd == Operation.Command.ROTATE)
             {
@@ -191,7 +306,11 @@ namespace Day21
                 var letter = operation.letterA;
                 if ((count == -1) && (letter != '0'))
                 {
-                    var index = input.IndexOf(letter);
+                    var index = FindIndexOf(input, letter);
+                    if ((index < 0) || (index >= input.Length))
+                    {
+                        throw new InvalidProgramException($"Invalid index {index} range:0-{input.Length}");
+                    }
                     count = 1 + index;
                     if (index >= 4)
                     {
@@ -200,14 +319,14 @@ namespace Day21
                 }
                 for (var i = 0; i < input.Length; ++i)
                 {
-                    var inputChar = inputChars[i];
+                    var inputChar = input[i];
                     var outputIndex = i + count;
                     while (outputIndex < 0)
                     {
                         outputIndex += input.Length;
                     }
                     outputIndex %= input.Length;
-                    outputChars[outputIndex] = inputChar;
+                    output[outputIndex] = inputChar;
                 }
             }
             else if (cmd == Operation.Command.REVERSE)
@@ -216,37 +335,36 @@ namespace Day21
                 var indexB = operation.indexB;
                 for (var i = indexA; i <= indexB; ++i)
                 {
-                    var inputChar = inputChars[i];
+                    var inputChar = input[i];
                     var outputIndex = indexB - (i - indexA);
-                    outputChars[outputIndex] = inputChar;
+                    output[outputIndex] = inputChar;
                 }
             }
             else if (cmd == Operation.Command.MOVE)
             {
                 var indexA = operation.indexA;
                 var indexB = operation.indexB;
-                var movedChar = inputChars[indexA];
+                var movedChar = input[indexA];
                 // Remove from source
-                for (var i = indexA; i < inputChars.Length - 1; ++i)
+                for (var i = indexA; i < input.Length - 1; ++i)
                 {
-                    var inputChar = inputChars[i + 1];
+                    var inputChar = input[i + 1];
                     var outputIndex = i;
-                    outputChars[outputIndex] = inputChar;
+                    output[outputIndex] = inputChar;
                 }
                 // Insert at destination
-                for (var i = inputChars.Length - 2; i >= indexB; --i)
+                for (var i = input.Length - 2; i >= indexB; --i)
                 {
-                    var inputChar = outputChars[i];
+                    var inputChar = output[i];
                     var outputIndex = i + 1;
-                    outputChars[outputIndex] = inputChar;
+                    output[outputIndex] = inputChar;
                 }
-                outputChars[indexB] = movedChar;
+                output[indexB] = movedChar;
             }
             else
             {
                 throw new InvalidProgramException($"Unknown command {cmd} operation:{operation}");
             }
-            return new string(outputChars);
         }
 
         static Operation ParseOperation(string operation)

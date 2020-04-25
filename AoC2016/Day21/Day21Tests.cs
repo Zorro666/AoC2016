@@ -18,7 +18,9 @@ namespace Day21
         public void Scramble(string operation, string input, string expectedResult)
         {
             Program.Parse(new string[] { operation });
-            Assert.That(Program.Scramble(input), Is.EqualTo(expectedResult));
+            var scrambled = new char[input.Length];
+            Program.Scramble(input.ToCharArray(), ref scrambled);
+            Assert.That(new string(scrambled), Is.EqualTo(expectedResult));
         }
 
         [Test]
@@ -30,12 +32,14 @@ namespace Day21
         [TestCase("move position 1 to position 4", "bcdea")]
         [TestCase("move position 3 to position 0", "bdeac")]
         [TestCase("rotate based on position of letter b", "abdec")]
-        [TestCase("rotate based on position of letter d", "ecabd")]
         public void UnScrambleOperation(string operation, string input)
         {
             Program.Parse(new string[] { operation });
-            var scramble = Program.Scramble(input);
-            Assert.That(Program.UnScramble(input, scramble, scramble), Is.EqualTo(input));
+            var scrambled = input.ToCharArray();
+            var unScrambled = new char[input.Length];
+            Program.Scramble(input.ToCharArray(), ref scrambled);
+            Program.UnScramble(scrambled, ref unScrambled);
+            Assert.That(new string(unScrambled), Is.EqualTo(input));
         }
     }
 }
