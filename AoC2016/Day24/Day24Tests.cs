@@ -6,10 +6,16 @@ namespace Day24
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day24(string directions, int expected)
+        [TestCase(new string[] {
+"###########",
+"#0.1.....2#",
+"#.#######.#",
+"#4.......3#",
+"###########" }, 14, TestName = "ShortestSteps 14")]
+        public void ShortestSteps(string[] input, int expected)
         {
-            Assert.Fail();
+            Program.Parse(input);
+            Assert.That(Program.ShortestSteps, Is.EqualTo(expected));
         }
     }
 }
