@@ -15,7 +15,7 @@ namespace Day24
         public void ShortestSteps(string[] input, int expected)
         {
             Program.Parse(input);
-            Assert.That(Program.ShortestSteps, Is.EqualTo(expected));
+            Assert.That(Program.ShortestSteps(false), Is.EqualTo(expected));
         }
     }
 }

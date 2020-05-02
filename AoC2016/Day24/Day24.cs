@@ -76,7 +76,7 @@ namespace Day24
 
             if (part1)
             {
-                var result1 = ShortestSteps();
+                var result1 = ShortestSteps(false);
                 Console.WriteLine($"Day24 : Result1 {result1}");
                 var expected = 518;
                 if (result1 != expected)
@@ -86,9 +86,9 @@ namespace Day24
             }
             else
             {
-                var result2 = -123;
+                var result2 = ShortestSteps(true);
                 Console.WriteLine($"Day24 : Result2 {result2}");
-                var expected = -666;
+                var expected = 716;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -238,7 +238,7 @@ namespace Day24
             return (x, y);
         }
 
-        public static int ShortestSteps()
+        public static int ShortestSteps(bool returnHome)
         {
             for (var l = 0; l < sLocationsCount - 1; ++l)
             {
@@ -256,11 +256,11 @@ namespace Day24
             var numSteps = 0;
             sMinSteps = int.MaxValue;
             sVisited[0] = true;
-            ShortestPathImpl(0, numSteps);
+            ShortestPathImpl(0, numSteps, returnHome);
             return sMinSteps;
         }
 
-        static void ShortestPathImpl(int start, int numSteps)
+        static void ShortestPathImpl(int start, int numSteps, bool returnHome)
         {
             for (var l = 1; l < sLocationsCount; ++l)
             {
@@ -284,12 +284,16 @@ namespace Day24
                     }
                     if (foundEnd)
                     {
-                        Console.WriteLine($"Found goal {distance} Min:{sMinSteps}");
+                        if (returnHome)
+                        {
+                            distance += sDistances[next, 0];
+                        }
+                        //Console.WriteLine($"Found goal {distance} Min:{sMinSteps}");
                         sMinSteps = Math.Min(sMinSteps, distance);
                         sVisited[next] = false;
                         return;
                     }
-                    ShortestPathImpl(next, distance);
+                    ShortestPathImpl(next, distance, returnHome);
                 }
                 sVisited[next] = false;
             }
