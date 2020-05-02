@@ -6,10 +6,26 @@ namespace Day25
     public class Tests
     {
         [Test]
-        [TestCase("", -3)]
-        public void Day25(string directions, int expected)
+        [TestCase(new string[] {
+"cpy 2 a",
+"tgl a",
+"tgl a",
+"tgl a",
+"cpy 1 a",
+"dec a",
+"dec a" }, 3, TestName = "TestProgram With tgl A = 3")]
+        [TestCase(new string[] {
+"cpy 41 a",
+"inc a",
+"inc a",
+"dec a",
+"jnz a 2",
+"dec a" }, 42, TestName = "TestProgram No tgl A = 42")]
+        public void TestCode(string[] code, int expectedA)
         {
-            Assert.Fail();
+            Program.Parse(code);
+            Program.RunProgram(1024 * 1024);
+            Assert.That(Program.A, Is.EqualTo(expectedA));
         }
     }
 }
