@@ -169,7 +169,7 @@ namespace Day22
         readonly static int sRootMoveIndex = 0;
 
         readonly static int MAX_STEPS_DEPTH = 500;
-        readonly static int MAX_NUM_MOVES = 750;
+        readonly static int MAX_NUM_MOVES = 1000;
         static Move[] sMoves;
         static List<int> sPendingMoves = new List<int>(MAX_NUM_MOVES);
         static int sMoveCount;
@@ -194,7 +194,7 @@ namespace Day22
             {
                 var result2 = ShortestSteps();
                 Console.WriteLine($"Day22 : Result2 {result2}");
-                var expected = 236;
+                var expected = 252;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
