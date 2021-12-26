@@ -64,7 +64,7 @@ namespace Day02
             {
                 long result1 = KeyCode(lines);
                 Console.WriteLine($"Day02 : Result1 {result1}");
-                long expected = 95549;
+                long expected = 99332;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -74,7 +74,7 @@ namespace Day02
             {
                 var result2 = KeyCode5x5(lines);
                 Console.WriteLine($"Day02 : Result2 {result2}");
-                var expected = "D87AD";
+                var expected = "DD483";
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

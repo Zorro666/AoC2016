@@ -60,7 +60,7 @@ namespace Day05
             {
                 var result1 = Password(lines[0].Trim());
                 Console.WriteLine($"Day05 : Result1 {result1}");
-                var expected = "f97c354d";
+                var expected = "2414bc77";
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");

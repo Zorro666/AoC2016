@@ -85,7 +85,7 @@ namespace Day18
             {
                 var result1 = CountSafeTiles(start, 40);
                 Console.WriteLine($"Day18 : Result1 {result1}");
-                var expected = 1956;
+                var expected = 2035;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -95,7 +95,7 @@ namespace Day18
             {
                 var result2 = CountSafeTiles(start, 400000);
                 Console.WriteLine($"Day18 : Result2 {result2}");
-                var expected = 19995121;
+                var expected = 20000577;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

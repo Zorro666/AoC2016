@@ -71,7 +71,7 @@ namespace Day21
             {
                 var result1 = new string(scramble);
                 Console.WriteLine($"Day21 : Result1 {result1}");
-                var expected = "dgfaehcb";
+                var expected = "bfheacgd";
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -90,7 +90,7 @@ namespace Day21
                 }
                 var result2 = new string(unscramble2);
                 Console.WriteLine($"Day21 : Result2 {result2}");
-                var expected = "fdhgacbe";
+                var expected = "gcehdbfa";
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

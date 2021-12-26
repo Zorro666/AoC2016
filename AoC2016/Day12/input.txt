@@ -15,7 +15,7 @@ cpy c b
 dec d
 jnz d -6
 cpy 19 c
-cpy 14 d
+cpy 11 d
 inc a
 dec d
 jnz d -2

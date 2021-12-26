@@ -100,7 +100,7 @@ namespace Day23
                 RunProgram();
                 var result1 = A;
                 Console.WriteLine($"Day23 : Result1 {result1}");
-                var expected = 12624;
+                var expected = 11500;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -118,7 +118,7 @@ namespace Day23
                 // 10 = 3636384
                 // 11 = 39924384
                 // 12 = 479009184
-                var expected = 479009184;
+                var expected = 479008060;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

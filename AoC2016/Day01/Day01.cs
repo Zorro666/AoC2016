@@ -55,7 +55,7 @@ namespace Day01
             {
                 long result1 = Distance();
                 Console.WriteLine($"Day01 : Result1 {result1}");
-                long expected = 252;
+                long expected = 253;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -65,7 +65,7 @@ namespace Day01
             {
                 long result2 = sHQdistance;
                 Console.WriteLine($"Day01 : Result2 {result2}");
-                long expected = 143;
+                long expected = 126;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

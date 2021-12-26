@@ -60,7 +60,7 @@ namespace Day03
             {
                 long result1 = CountValidTriangles();
                 Console.WriteLine($"Day03 : Result1 {result1}");
-                long expected = 993;
+                long expected = 917;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -70,7 +70,7 @@ namespace Day03
             {
                 long result2 = CountValidTrianglesColumns();
                 Console.WriteLine($"Day03 : Result2 {result2}");
-                long expected = 1849;
+                long expected = 1649;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

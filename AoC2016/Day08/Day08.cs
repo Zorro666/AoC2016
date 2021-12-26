@@ -82,7 +82,7 @@ namespace Day08
             {
                 var result1 = CountLit;
                 Console.WriteLine($"Day08 : Result1 {result1}");
-                var expected = 128;
+                var expected = 119;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -95,9 +95,9 @@ namespace Day08
                 {
                     Console.WriteLine(line);
                 }
-                var result2 = "EOARGPHYAO";
+                var result2 = "ZFHFSFOGPO";
                 Console.WriteLine($"Day08 : Result2 {result2}");
-                var expected = "EOARGPHYAO";
+                var expected = "ZFHFSFOGPO";
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

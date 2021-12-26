@@ -184,7 +184,7 @@ namespace Day22
             {
                 var result1 = CountViablePairs();
                 Console.WriteLine($"Day22 : Result1 {result1}");
-                var expected = 888;
+                var expected = 1038;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");

@@ -84,7 +84,7 @@ namespace Day16
             {
                 var result1 = FillDisk(input, 272);
                 Console.WriteLine($"Day16 : Result1 {result1}");
-                var expected = "11100111011101111";
+                var expected = "10010010110011010";
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -94,7 +94,7 @@ namespace Day16
             {
                 var result2 = FillDisk(input, 35651584);
                 Console.WriteLine($"Day16 : Result2 {result2}");
-                var expected = "10001110010000110";
+                var expected = "01010100101011100";
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

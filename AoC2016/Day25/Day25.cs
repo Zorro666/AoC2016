@@ -71,7 +71,7 @@ namespace Day25
             {
                 var result1 = FindInputSignal();
                 Console.WriteLine($"Day25 : Result1 {result1}");
-                var expected = 192;
+                var expected = 180;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");

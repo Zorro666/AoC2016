@@ -63,7 +63,7 @@ namespace Day10
             {
                 var result1 = ComparingBot(61, 17);
                 Console.WriteLine($"Day10 : Result1 {result1}");
-                var expected = 157;
+                var expected = 73;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -73,7 +73,7 @@ namespace Day10
             {
                 long result2 = OutputValue(0) * OutputValue(1) * OutputValue(2);
                 Console.WriteLine($"Day10 : Result2 {result2}");
-                long expected = 1085;
+                long expected = 3965;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

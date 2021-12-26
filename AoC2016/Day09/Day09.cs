@@ -59,7 +59,7 @@ namespace Day09
             {
                 long result1 = TotalDecompressedLength(lines, false);
                 Console.WriteLine($"Day09 : Result1 {result1}");
-                long expected = 152851;
+                long expected = 97714;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -69,7 +69,7 @@ namespace Day09
             {
                 long result2 = TotalDecompressedLength(lines, true);
                 Console.WriteLine($"Day09 : Result2 {result2}");
-                long expected = 11797310782;
+                long expected = 10762972461;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

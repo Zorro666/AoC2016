@@ -70,7 +70,7 @@ namespace Day15
             {
                 var result1 = FindEscapeTime();
                 Console.WriteLine($"Day15 : Result1 {result1}");
-                var expected = 400589;
+                var expected = 317371;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -86,7 +86,7 @@ namespace Day15
                 ++sDiscsCount;
                 var result2 = FindEscapeTime();
                 Console.WriteLine($"Day15 : Result2 {result2}");
-                var expected = 3045959;
+                var expected = 2080951;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

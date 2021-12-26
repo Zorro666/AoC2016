@@ -50,7 +50,7 @@ namespace Day07
             {
                 var result1 = CountTCPs(lines);
                 Console.WriteLine($"Day07 : Result1 {result1}");
-                var expected = 115;
+                var expected = 110;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -60,7 +60,7 @@ namespace Day07
             {
                 var result2 = CountSSLs(lines);
                 Console.WriteLine($"Day07 : Result2 {result2}");
-                var expected = 231;
+                var expected = 242;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");

@@ -794,7 +794,7 @@ namespace Day11
         {
             Console.WriteLine("Day11 : Start");
             _ = new Program("Day11/input.txt", true);
-            //_ = new Program("Day11/input.txt", false);
+            _ = new Program("Day11/input.txt", false);
             Console.WriteLine("Day11 : End");
         }
     }

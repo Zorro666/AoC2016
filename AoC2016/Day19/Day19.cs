@@ -86,7 +86,7 @@ namespace Day19
             {
                 var result1 = ElfWithPresents(elfCount, false);
                 Console.WriteLine($"Day19 : Result1 {result1}");
-                var expected = 1815603;
+                var expected = 1841611;
                 if (result1 != expected)
                 {
                     throw new InvalidProgramException($"Part1 is broken {result1} != {expected}");
@@ -96,7 +96,7 @@ namespace Day19
             {
                 var result2 = ElfWithPresents(elfCount, true);
                 Console.WriteLine($"Day19 : Result2 {result2}");
-                var expected = 1410630;
+                var expected = 1423634;
                 if (result2 != expected)
                 {
                     throw new InvalidProgramException($"Part2 is broken {result2} != {expected}");
@@ -263,7 +263,7 @@ namespace Day19
         public static void Run()
         {
             Console.WriteLine("Day19 : Start");
-            _ = new Program("Day19/input.txt", true);
+            //_ = new Program("Day19/input.txt", true);
             _ = new Program("Day19/input.txt", false);
             Console.WriteLine("Day19 : End");
         }
